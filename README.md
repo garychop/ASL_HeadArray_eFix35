@@ -1,3 +1,3 @@
-# ASL110_PropHeadArray
+# ASL Head Array for eFix 35 system
 
-Firmware for Invacare's ASL110 proportional head array
+Firmware for Invacare's ASLhead array
