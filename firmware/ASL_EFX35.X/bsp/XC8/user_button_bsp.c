@@ -28,10 +28,10 @@
 
 /* ******************************   Macros   ****************************** */
 
-#define USER_BTN_IS_ACTIVE()	(PORTBbits.RB1 == GPIO_LOW)
+#define USER_BTN_IS_ACTIVE()	(PORTBbits.RB0 == GPIO_LOW)
 void USER_BTN_INIT()
 {
-    TRISBbits.TRISB1 = GPIO_BIT_INPUT;
+    TRISBbits.TRISB0 = GPIO_BIT_INPUT;
     //ANSELBbits.ANSELB1 = 0;
 }
 

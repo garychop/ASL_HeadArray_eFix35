@@ -12,6 +12,8 @@
 
 /* **************************   Header Files   *************************** */
 
+#include <xc.h>
+
 // NOTE: This must ALWAYS be the first include in a file.
 #include "device.h"
 
@@ -49,6 +51,9 @@ static void TestSetup(void);
 //-------------------------------
 void main(void)
 {
+    // TODO:Take out
+//    while(1){}
+    
     os_init();
 
     bspInitCore();

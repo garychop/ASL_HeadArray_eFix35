@@ -66,8 +66,13 @@
 //-------------------------------
 void testGpioInit(void)
 {
-	TEST_GPIO_0_INIT();
-	TEST_GPIO_1_INIT();
+//	TEST_GPIO_0_INIT();
+//	TEST_GPIO_1_INIT();
+    TRISCbits.TRISC0 = GPIO_BIT_OUTPUT;         // LED4 control
+//    TRISCbits.TRISC1 = GPIO_BIT_OUTPUT;       // Beeper control
+    //LATCbits.LC0 = GPIO_HIGH;
+    LATCbits.LATC0 = GPIO_HIGH;
+//    LATCbits.LATC1 = GPIO_HIGH;
 }
 
 //-------------------------------

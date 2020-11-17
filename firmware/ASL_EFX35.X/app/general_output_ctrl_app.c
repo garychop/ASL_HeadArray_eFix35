@@ -77,8 +77,8 @@
 
 // The following read the signal from the Blue tooth module. 
 // Is is intended to control the Blue LED
-#define BT_MODULE_LED_IS_ACTIVE()	(PORTCbits.RC4 == GPIO_HIGH)
-#define BT_MODULE_LED_INPUT_INIT()	INLINE_EXPR(TRISCbits.TRISC4 = GPIO_BIT_INPUT; ANSELCbits.ANSELC4 = 0)
+#define BT_MODULE_LED_IS_ACTIVE()	(PORTCbits.RC5 == GPIO_HIGH)
+#define BT_MODULE_LED_INPUT_INIT()	INLINE_EXPR(TRISCbits.TRISC5 = GPIO_BIT_INPUT; ANSELCbits.ANSELC5 = 0)
 
 
 /*

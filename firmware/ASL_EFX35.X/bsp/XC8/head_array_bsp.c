@@ -73,9 +73,9 @@
 //-------------------------------
 void headArrayBspInit(void)
 {
-	DIG_LEFT_PAD_INIT();
-	DIG_RIGHT_PAD_INIT();
-	DIG_CTR_PAD_INIT();
+//	DIG_LEFT_PAD_INIT();
+//	DIG_RIGHT_PAD_INIT();
+//	DIG_CTR_PAD_INIT();
 
 #ifdef _18F46K40
     ANA_LEFT_PAD_INIT();
@@ -108,7 +108,8 @@ void headArrayBspInit(void)
     ADFLTRLbits.ADFLTRL = 0; // Don't care since not filtering or averaging.
     
     ADCON0bits.ADON = 1; // Enable ADC
-#else
+// TODO: Fix following #else
+// #else
 	ADCON1bits.VCFG01 = 0; // VSS negative voltage reference
 	ADCON1bits.VCFG11 = 0; // VDD positive voltage reference
 	ADCON1bits.PCFG = 0; // GC, 11/12/20 0x0C; // Channels AN0->2 are enabled
@@ -134,22 +135,23 @@ void headArrayBspInit(void)
 //-------------------------------
 bool headArrayBspDigitalState(HeadArraySensor_t sensor_id)
 {
-	switch (sensor_id)
-	{
-		case HEAD_ARRAY_SENSOR_LEFT:
-			return DIG_LEFT_PAD_IS_ACTIVE();
-
-		case HEAD_ARRAY_SENSOR_RIGHT:
-			return DIG_RIGHT_PAD_IS_ACTIVE();
-			
-		case HEAD_ARRAY_SENSOR_CENTER:
-			return DIG_CTR_PAD_IS_ACTIVE();
-			
-		case HEAD_ARRAY_SENSOR_EOL:
-		default:
-			ASSERT(sensor_id == HEAD_ARRAY_SENSOR_CENTER);
-			return false; // Return something.
-	}
+//	switch (sensor_id)
+//	{
+//		case HEAD_ARRAY_SENSOR_LEFT:
+//			return DIG_LEFT_PAD_IS_ACTIVE();
+//
+//		case HEAD_ARRAY_SENSOR_RIGHT:
+//			return DIG_RIGHT_PAD_IS_ACTIVE();
+//			
+//		case HEAD_ARRAY_SENSOR_CENTER:
+//			return DIG_CTR_PAD_IS_ACTIVE();
+//			
+//		case HEAD_ARRAY_SENSOR_EOL:
+//		default:
+//			ASSERT(sensor_id == HEAD_ARRAY_SENSOR_CENTER);
+//			return false; // Return something.
+//	}
+    return false;
 }
 
 //-------------------------------
@@ -160,27 +162,27 @@ bool headArrayBspDigitalState(HeadArraySensor_t sensor_id)
 //-------------------------------
 uint16_t headArrayBspAnalogState(HeadArraySensor_t sensor_id)
 {
-    uint8_t selected_adc_ch;
-
-	switch (sensor_id)
-	{
-		case HEAD_ARRAY_SENSOR_LEFT:
-            selected_adc_ch = ADC_CH0_SEL; // Pin A0
-			break;
-
-		case HEAD_ARRAY_SENSOR_RIGHT:
-            selected_adc_ch = ADC_CH1_SEL; // Pin A1
-			break;
-			
-		case HEAD_ARRAY_SENSOR_CENTER:
-            selected_adc_ch = ADC_CH2_SEL; // Pin A2
-			break;
-			
-		case HEAD_ARRAY_SENSOR_EOL:
-		default:
-			ASSERT(sensor_id == HEAD_ARRAY_SENSOR_CENTER);
-			break;
-	}
+//    uint8_t selected_adc_ch;
+//
+//	switch (sensor_id)
+//	{
+//		case HEAD_ARRAY_SENSOR_LEFT:
+//            selected_adc_ch = ADC_CH0_SEL; // Pin A0
+//			break;
+//
+//		case HEAD_ARRAY_SENSOR_RIGHT:
+//            selected_adc_ch = ADC_CH1_SEL; // Pin A1
+//			break;
+//			
+//		case HEAD_ARRAY_SENSOR_CENTER:
+//            selected_adc_ch = ADC_CH2_SEL; // Pin A2
+//			break;
+//			
+//		case HEAD_ARRAY_SENSOR_EOL:
+//		default:
+//			ASSERT(sensor_id == HEAD_ARRAY_SENSOR_CENTER);
+//			break;
+//	}
     
 #ifdef _18F46K40
     ADPCHbits.ADPCH = selected_adc_ch;
@@ -196,21 +198,22 @@ uint16_t headArrayBspAnalogState(HeadArraySensor_t sensor_id)
 		(void)0;
 	}
 #else
-    ADCON0bits.CHS = selected_adc_ch;
-    
-	// Need to wait at least Tad * 3. Clock is FOSC/16, which gets us: 3/(625,000) = ~4.8 us.  Our delay resolution is not
-	// great, so we just delay for the min time.
-	bspDelayUs(US_DELAY_20_us);
-	
-	// Kick off the conversion
-	ADCON0bits.GO_nDONE = 1;
-	while (ADCON0bits.GO_nDONE == 1)
-	{
-		(void)0;
-	}
+//    ADCON0bits.CHS = selected_adc_ch;
+//    
+//	// Need to wait at least Tad * 3. Clock is FOSC/16, which gets us: 3/(625,000) = ~4.8 us.  Our delay resolution is not
+//	// great, so we just delay for the min time.
+//	bspDelayUs(US_DELAY_20_us);
+//	
+//	// Kick off the conversion
+//	ADCON0bits.GO_nDONE = 1;
+//	while (ADCON0bits.GO_nDONE == 1)
+//	{
+//		(void)0;
+//	}
 #endif
     
-	return ((uint16_t)ADRESL + ((uint16_t)(ADRESH & 0x3) << 8));
+//	return ((uint16_t)ADRESL + ((uint16_t)(ADRESH & 0x3) << 8));
+    return 0;
 }
 
 //-------------------------------
@@ -221,22 +224,23 @@ uint16_t headArrayBspAnalogState(HeadArraySensor_t sensor_id)
 //-------------------------------
 uint16_t headArrayBspProportionalMaxValue(HeadArraySensor_t sensor_id)
 {
-	switch (sensor_id)
-	{
-		case HEAD_ARRAY_SENSOR_LEFT:
-			return ADC_LEFT_PAD_MAX_VAL;
-			
-		case HEAD_ARRAY_SENSOR_RIGHT:
-			return ADC_RIGHT_PAD_MAX_VAL;
-
-		case HEAD_ARRAY_SENSOR_CENTER:
-			return ADC_CTR_PAD_MAX_VAL;
-
-		default:
-			ASSERT(sensor_id == HEAD_ARRAY_SENSOR_CENTER);
-			return ADC_CTR_PAD_MAX_VAL;
-			break;
-	}
+//	switch (sensor_id)
+//	{
+//		case HEAD_ARRAY_SENSOR_LEFT:
+//			return ADC_LEFT_PAD_MAX_VAL;
+//			
+//		case HEAD_ARRAY_SENSOR_RIGHT:
+//			return ADC_RIGHT_PAD_MAX_VAL;
+//
+//		case HEAD_ARRAY_SENSOR_CENTER:
+//			return ADC_CTR_PAD_MAX_VAL;
+//
+//		default:
+//			ASSERT(sensor_id == HEAD_ARRAY_SENSOR_CENTER);
+//			return ADC_CTR_PAD_MAX_VAL;
+//			break;
+//	}
+    return 0;
 }
 
 //-------------------------------
@@ -247,22 +251,23 @@ uint16_t headArrayBspProportionalMaxValue(HeadArraySensor_t sensor_id)
 //-------------------------------
 uint16_t headArrayBspProportionalMinValue(HeadArraySensor_t sensor_id)
 {
-	switch (sensor_id)
-	{
-		case HEAD_ARRAY_SENSOR_LEFT:
-			return ADC_LEFT_PAD_MIN_VAL;
-			
-		case HEAD_ARRAY_SENSOR_RIGHT:
-			return ADC_RIGHT_PAD_MIN_VAL;
-
-		case HEAD_ARRAY_SENSOR_CENTER:
-			return ADC_CTR_PAD_MIN_VAL;
-
-		default:
-			ASSERT(sensor_id == HEAD_ARRAY_SENSOR_CENTER);
-			return ADC_CTR_PAD_MIN_VAL;
-			break;
-	}
+//	switch (sensor_id)
+//	{
+//		case HEAD_ARRAY_SENSOR_LEFT:
+//			return ADC_LEFT_PAD_MIN_VAL;
+//			
+//		case HEAD_ARRAY_SENSOR_RIGHT:
+//			return ADC_RIGHT_PAD_MIN_VAL;
+//
+//		case HEAD_ARRAY_SENSOR_CENTER:
+//			return ADC_CTR_PAD_MIN_VAL;
+//
+//		default:
+//			ASSERT(sensor_id == HEAD_ARRAY_SENSOR_CENTER);
+//			return ADC_CTR_PAD_MIN_VAL;
+//			break;
+//	}
+    return 0;
 }
 
 // end of file.

@@ -79,9 +79,9 @@
 //-------------------------------
 void bluetoothSimpleIfBspInit(void)
 {
-	BT_LEFT_PAD_INIT();
-	BT_RIGHT_PAD_INIT();
-	BT_CTR_PAD_INIT();
+//	BT_LEFT_PAD_INIT();
+//	BT_RIGHT_PAD_INIT();
+//	BT_CTR_PAD_INIT();
 }
 
 //-------------------------------
@@ -92,9 +92,9 @@ void bluetoothSimpleIfBspInit(void)
 //-------------------------------
 void bluetoothSimpleIfBspPadMirrorDisable(void)
 {
-	bluetoothSimpleIfBspPadMirrorStateSet(HEAD_ARRAY_SENSOR_LEFT, false);
-	bluetoothSimpleIfBspPadMirrorStateSet(HEAD_ARRAY_SENSOR_RIGHT, false);
-	bluetoothSimpleIfBspPadMirrorStateSet(HEAD_ARRAY_SENSOR_CENTER, false);
+//	bluetoothSimpleIfBspPadMirrorStateSet(HEAD_ARRAY_SENSOR_LEFT, false);
+//	bluetoothSimpleIfBspPadMirrorStateSet(HEAD_ARRAY_SENSOR_RIGHT, false);
+//	bluetoothSimpleIfBspPadMirrorStateSet(HEAD_ARRAY_SENSOR_CENTER, false);
 }
 
 //-------------------------------
@@ -105,25 +105,25 @@ void bluetoothSimpleIfBspPadMirrorDisable(void)
 //-------------------------------
 void bluetoothSimpleIfBspPadMirrorStateSet(HeadArraySensor_t sensor_id, bool active)
 {
-	switch (sensor_id)
-	{
-		case HEAD_ARRAY_SENSOR_LEFT:
-			BT_LEFT_PAD_SET(active);
-			break;
-
-		case HEAD_ARRAY_SENSOR_RIGHT:
-			BT_RIGHT_PAD_SET(active);
-			break;
-			
-		case HEAD_ARRAY_SENSOR_CENTER:
-			BT_CTR_PAD_SET(active);
-			break;
-			
-		case HEAD_ARRAY_SENSOR_EOL:
-		default:
-			ASSERT(sensor_id == HEAD_ARRAY_SENSOR_CENTER);
-			break;
-	}
+//	switch (sensor_id)
+//	{
+//		case HEAD_ARRAY_SENSOR_LEFT:
+//			BT_LEFT_PAD_SET(active);
+//			break;
+//
+//		case HEAD_ARRAY_SENSOR_RIGHT:
+//			BT_RIGHT_PAD_SET(active);
+//			break;
+//			
+//		case HEAD_ARRAY_SENSOR_CENTER:
+//			BT_CTR_PAD_SET(active);
+//			break;
+//			
+//		case HEAD_ARRAY_SENSOR_EOL:
+//		default:
+//			ASSERT(sensor_id == HEAD_ARRAY_SENSOR_CENTER);
+//			break;
+//	}
 }
 
 //-------------------------------
@@ -134,24 +134,25 @@ void bluetoothSimpleIfBspPadMirrorStateSet(HeadArraySensor_t sensor_id, bool act
 //-------------------------------
 bool bluetoothSimpleIfBspPadMirrorStateGet(HeadArraySensor_t sensor_id)
 {
-	uint8_t output_pin;
-
-	switch (sensor_id)
-	{
-		case HEAD_ARRAY_SENSOR_LEFT:
-			return BT_LEFT_PAD_IS_ACTIVE();
-
-		case HEAD_ARRAY_SENSOR_RIGHT:
-			return BT_RIGHT_PAD_IS_ACTIVE();
-			
-		case HEAD_ARRAY_SENSOR_CENTER:
-			return BT_CTR_PAD_IS_ACTIVE();
-			
-		case HEAD_ARRAY_SENSOR_EOL:
-		default:
-			ASSERT(sensor_id == HEAD_ARRAY_SENSOR_CENTER);
-			return false;
-	}
+//	uint8_t output_pin;
+//
+//	switch (sensor_id)
+//	{
+//		case HEAD_ARRAY_SENSOR_LEFT:
+//			return BT_LEFT_PAD_IS_ACTIVE();
+//
+//		case HEAD_ARRAY_SENSOR_RIGHT:
+//			return BT_RIGHT_PAD_IS_ACTIVE();
+//			
+//		case HEAD_ARRAY_SENSOR_CENTER:
+//			return BT_CTR_PAD_IS_ACTIVE();
+//			
+//		case HEAD_ARRAY_SENSOR_EOL:
+//		default:
+//			ASSERT(sensor_id == HEAD_ARRAY_SENSOR_CENTER);
+//			return false;
+//	}
+    return false;   // TODO: Replace with real code.
 }
 
 // end of file.
