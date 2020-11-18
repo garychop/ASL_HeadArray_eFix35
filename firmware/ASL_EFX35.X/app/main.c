@@ -36,6 +36,7 @@
 #include "ha_hhp_interface_app.h"
 #include "app_common.h"
 
+#include "beeper_bsp.h"
 // Useful, but need all the space we can get.
 #if 0
 static void TestSetup(void);
@@ -51,9 +52,6 @@ static void TestSetup(void);
 //-------------------------------
 void main(void)
 {
-    // TODO:Take out
-//    while(1){}
-    
     os_init();
 
     bspInitCore();
@@ -66,6 +64,28 @@ void main(void)
 	userButtonInit();
 	headArrayinit();
 //	haHhpApp_Init();
+    
+    // TODO:Take out
+#if 0
+    TRISEbits.TRISE0 = GPIO_BIT_OUTPUT;         // LED1 control
+    TRISEbits.TRISE1 = GPIO_BIT_OUTPUT;         // LED2 control
+    TRISEbits.TRISE2 = GPIO_BIT_OUTPUT;         // LED3 control
+    TRISCbits.TRISC0 = GPIO_BIT_OUTPUT;         // LED4 control
+    TRISAbits.TRISA1 = GPIO_BIT_OUTPUT;         // LED5 control
+    while(1)
+    {
+        LATEbits.LATE0 = GPIO_HIGH;
+        LATEbits.LATE1 = GPIO_HIGH;
+        LATEbits.LATE2 = GPIO_HIGH;
+        LATCbits.LATC0 = GPIO_HIGH;
+        LATAbits.LATA1 = GPIO_HIGH;
+        LATEbits.LATE0 = GPIO_LOW;
+        LATEbits.LATE1 = GPIO_LOW;
+        LATEbits.LATE2 = GPIO_LOW;
+        LATCbits.LATC0 = GPIO_LOW;
+        LATAbits.LATA1 = GPIO_LOW;;
+    }
+#endif
 
 	// This must come after beeperInit() otherwise the pattern request will be ignored by the beeper module.
 	if (!eeprom_initialized_before)

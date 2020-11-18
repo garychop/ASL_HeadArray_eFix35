@@ -102,13 +102,13 @@
 	// CONFIG1H
 	#pragma config FOSC		= HS	// Oscillator Selection bits (HS oscillator (HS))
 //GC Original	#pragma config FCMEN	= OFF	// Fail-Safe Clock Monitor Enable bit (Fail-Safe Clock Monitor disabled)
-	#pragma config FCMEN	= ON	// Fail-Safe Clock Monitor Enable bit (Fail-Safe Clock Monitor disabled)
+	#pragma config FCMEN	= OFF	// Fail-Safe Clock Monitor Enable bit (Fail-Safe Clock Monitor disabled)
 	#pragma config IESO		= OFF	// Internal/External Oscillator Switchover bit (Oscillator Switchover mode disabled)
 //GC Original 	#pragma config IESO		= OFF	// Internal/External Oscillator Switchover bit (Oscillator Switchover mode disabled)
 
 	// CONFIG2L
 	#pragma config PWRT		= OFF	// Power-up Timer Enable bit (PWRT disabled)
-	#pragma config BOR		= ON	// Brown-out Reset Enable bits (Brown-out Reset enabled in hardware only (SBOREN is disabled))
+	#pragma config BOR		= OFF	// Brown-out Reset Enable bits (Brown-out Reset enabled in hardware only (SBOREN is disabled))
 	#pragma config BORV		= 3		// Brown-out Reset Voltage bits (Minimum setting 2.05V)
 //GC Original	#pragma config BORV		= 3		// Brown-out Reset Voltage bits (Minimum setting 2.05V)
 	#pragma config VREGEN	= OFF	// USB Voltage Regulator Enable bit (USB voltage regulator disabled)
