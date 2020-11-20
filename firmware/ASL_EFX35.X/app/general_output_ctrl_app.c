@@ -118,6 +118,18 @@ static GenOutCtrlStateStepDef_t control_disabled_in_state[] =
 
 static bool g_BT_State = GPIO_LOW;
 
+// LED state processing definitions
+static GenOutCtrlStateStepDef_t LED_Steady_Off_StateDefinition[] =
+{
+    GEN_OUT_CTRL_ALWAYS_OFF,        // Turn off LED
+    GEN_OUT_CTRL_END_OF_STATE
+};
+static GenOutCtrlStateStepDef_t LED_Steady_On_StateDefinition[] =
+{
+    GEN_OUT_CTRL_ALWAYS_ON,        // Turn on LED
+    GEN_OUT_CTRL_END_OF_STATE
+};
+
 
 /******************************************* LED0 ****************************************/
 // LED0 ON = Green color
@@ -382,7 +394,7 @@ static void ControlTask(void)
     StopWatch_t task_time_elapsed_sw;
     stopwatchStart(&task_time_elapsed_sw);
 
-    GenOutCtrl_Stop (GEN_OUT_CTRL_ID_BT_LED);
+//    GenOutCtrl_Stop (GEN_OUT_CTRL_ID_BT_LED);
 
 	while (1)
 	{
@@ -408,12 +420,12 @@ static void ControlTask(void)
         // being enabled.
         if ((eeprom8bitGet(EEPROM_STORED_ITEM_ENABLED_FEATURES) & FUNC_FEATURE_OUT_CTRL_TO_BT_MODULE_BIT_MASK) > 0)
         {
-            GenOutCtrl_Disable (GEN_OUT_CTRL_ID_BT_LED);
+            //GenOutCtrl_Disable (GEN_OUT_CTRL_ID_BT_LED);
             // GenOutCtrlApp_SetStateAll (GEN_OUT_BLUETOOTH_ENABLED);
         }
         else 
         {
-            GenOutCtrl_Enable (GEN_OUT_CTRL_ID_BT_LED);
+            //GenOutCtrl_Enable (GEN_OUT_CTRL_ID_BT_LED);
             //GenOutCtrlApp_SetStateAll (GEN_OUT_BLUETOOTH_DISABLED);
         }
         
@@ -431,42 +443,63 @@ static void ControlTask(void)
  */
 static void AddStates(void)
 {
-    // Add state definitions for LED0. (Green Color)
-    if (!GenOutCtrl_AddState(GEN_OUT_CTRL_ID_LED0, GEN_OUT_CTRL_STATE_BLUETOOTH_OUTPUT, false, 0, control_disabled_in_state) ||
-        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_LED0, GEN_OUT_CTRL_STATE_HEAD_ARRAY_ACTIVE, false, 0, led0_state_HEAD_ARRAY_ACTIVE) ||
-        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_LED0, GEN_OUT_CTRL_STATE_NO_OUTPUT, false, 0, led0_state_NO_OUTPUT) ||
-        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_LED0, GEN_OUT_STATE_CTRL_TEST, false, 0, control_disabled_in_state))
+    // NOTE: The first entry is executed at Power Up. So it's the one to set the initial state of the item.
+    
+    // Add state definitions for LED1, Forward Pad LED
+    if (!GenOutCtrl_AddState(GEN_OUT_CTRL_ID_FORWARD_PAD_LED, GEN_OUT_FORWARD_PAD_INACTIVE, true, 0, LED_Steady_Off_StateDefinition) ||
+        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_FORWARD_PAD_LED, GEN_OUT_FORWARD_PAD_ACTIVE, true, 0, LED_Steady_On_StateDefinition))
+    {
+        ASSERT(false);
+    }
+
+    // Add state definitions for LED2, Reverse Pad LED
+    if (!GenOutCtrl_AddState(GEN_OUT_CTRL_ID_REVERSE_PAD_LED, GEN_OUT_REVERSE_PAD_INACTIVE, true, 0, LED_Steady_Off_StateDefinition) ||
+        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_REVERSE_PAD_LED, GEN_OUT_REVERSE_PAD_ACTIVE, true, 0, LED_Steady_On_StateDefinition))
+    {
+        ASSERT(false);
+    }
+
+//    // Add state definitions for LED3, Left Pad LED
+    if (!GenOutCtrl_AddState(GEN_OUT_CTRL_ID_LEFT_PAD_LED, GEN_OUT_LEFT_PAD_INACTIVE, true, 0, LED_Steady_Off_StateDefinition) ||
+        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_LEFT_PAD_LED, GEN_OUT_LEFT_PAD_ACTIVE, true, 0, LED_Steady_On_StateDefinition))
+    {
+        ASSERT(false);
+    }
+
+    // Add state definitions for LED4, Right Pad LED
+    if (!GenOutCtrl_AddState(GEN_OUT_CTRL_ID_RIGHT_PAD_LED, GEN_OUT_RIGHT_PAD_INACTIVE, true, 0, LED_Steady_Off_StateDefinition) || 
+        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_RIGHT_PAD_LED, GEN_OUT_RIGHT_PAD_ACTIVE, true, 0, LED_Steady_On_StateDefinition))
     {
         ASSERT(false);
     }
 
     // Add state definitions for LED1. (Amber Color)
-    if (!GenOutCtrl_AddState(GEN_OUT_CTRL_ID_LED1, GEN_OUT_CTRL_STATE_BLUETOOTH_OUTPUT, false, 0, led1_state_BLUETOOTH_OUTPUT) ||
-        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_LED1, GEN_OUT_CTRL_STATE_HEAD_ARRAY_ACTIVE, false, 0, control_disabled_in_state) ||
-        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_LED1, GEN_OUT_CTRL_STATE_NO_OUTPUT, false, 0, control_disabled_in_state) ||
-        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_LED1, GEN_OUT_STATE_CTRL_TEST, false, 0, control_disabled_in_state))
-    {
-        ASSERT(false);
-    }
+//    if (!GenOutCtrl_AddState(GEN_OUT_CTRL_ID_LED1, GEN_OUT_CTRL_STATE_BLUETOOTH_OUTPUT, false, 0, led1_state_BLUETOOTH_OUTPUT) ||
+//        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_LED1, GEN_OUT_CTRL_STATE_HEAD_ARRAY_ACTIVE, false, 0, control_disabled_in_state) ||
+//        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_LED1, GEN_OUT_CTRL_STATE_NO_OUTPUT, false, 0, control_disabled_in_state) ||
+//        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_LED1, GEN_OUT_STATE_CTRL_TEST, false, 0, control_disabled_in_state))
+//    {
+//        ASSERT(false);
+//    }
 
     // Add state definitions for internal system action output control.
-    if (!GenOutCtrl_AddState(GEN_OUT_CTRL_ID_INTERNAL_SYS_ACTION, GEN_OUT_CTRL_STATE_HEAD_ARRAY_RESETTING, true, 0, int_sys_act_HEAD_ARRAY_RESETTING) ||
-        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_INTERNAL_SYS_ACTION, GEN_OUT_CTRL_STATE_STATE_USER_BTN_NEXT_FUNCTION, true, 0, int_sys_act_STATE_USER_BTN_NEXT_FUNCTION) ||
-        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_INTERNAL_SYS_ACTION, GEN_OUT_CTRL_STATE_USER_BTN_NEXT_PROFILE, true, 0, int_sys_act_STATE_USER_BTN_NEXT_PROFILE) ||
-        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_INTERNAL_SYS_ACTION, GEN_OUT_STATE_CTRL_TEST, false, 0, control_disabled_in_state) ||
-        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_INTERNAL_SYS_ACTION, GEN_OUT_CTRL_STATE_MODE_ACTIVE, true, 0, int_sys_act_STATE_MODE_ACTIVE) ||
-        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_INTERNAL_SYS_ACTION, GEN_OUT_CTRL_STATE_MODE_INACTIVE, true, 0, int_sys_act_STATE_MODE_INACTIVE) ||
-        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_INTERNAL_SYS_ACTION, GEN_OUT_CTRL_RNET_SLEEP, true, 0, int_sys_act_STATE_USER_RNET_SLEEP))
-    {
-        ASSERT(false);
-    }
+//    if (!GenOutCtrl_AddState(GEN_OUT_CTRL_ID_INTERNAL_SYS_ACTION, GEN_OUT_CTRL_STATE_HEAD_ARRAY_RESETTING, true, 0, int_sys_act_HEAD_ARRAY_RESETTING) ||
+//        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_INTERNAL_SYS_ACTION, GEN_OUT_CTRL_STATE_STATE_USER_BTN_NEXT_FUNCTION, true, 0, int_sys_act_STATE_USER_BTN_NEXT_FUNCTION) ||
+//        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_INTERNAL_SYS_ACTION, GEN_OUT_CTRL_STATE_USER_BTN_NEXT_PROFILE, true, 0, int_sys_act_STATE_USER_BTN_NEXT_PROFILE) ||
+//        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_INTERNAL_SYS_ACTION, GEN_OUT_STATE_CTRL_TEST, false, 0, control_disabled_in_state) ||
+//        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_INTERNAL_SYS_ACTION, GEN_OUT_CTRL_STATE_MODE_ACTIVE, true, 0, int_sys_act_STATE_MODE_ACTIVE) ||
+//        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_INTERNAL_SYS_ACTION, GEN_OUT_CTRL_STATE_MODE_INACTIVE, true, 0, int_sys_act_STATE_MODE_INACTIVE) ||
+//        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_INTERNAL_SYS_ACTION, GEN_OUT_CTRL_RNET_SLEEP, true, 0, int_sys_act_STATE_USER_RNET_SLEEP))
+//    {
+//        ASSERT(false);
+//    }
 
     // Add state definitions for Bluetooth Blue LED control.
-    if (!GenOutCtrl_AddState(GEN_OUT_CTRL_ID_BT_LED, GEN_OUT_BLUETOOTH_ENABLED, true, 0, bluetooth_enable_BLUETOOTH_LED_CTRL) ||
-        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_BT_LED, GEN_OUT_BLUETOOTH_DISABLED, true, 0, bluetooth_disable_BLUETOOTH_LED_CTRL))
-    {
-        ASSERT(false);
-    }
+//    if (!GenOutCtrl_AddState(GEN_OUT_CTRL_ID_BT_LED, GEN_OUT_BLUETOOTH_ENABLED, true, 0, bluetooth_enable_BLUETOOTH_LED_CTRL) ||
+//        !GenOutCtrl_AddState(GEN_OUT_CTRL_ID_BT_LED, GEN_OUT_BLUETOOTH_DISABLED, true, 0, bluetooth_disable_BLUETOOTH_LED_CTRL))
+//    {
+//        ASSERT(false);
+//    }
 }
 
 /**

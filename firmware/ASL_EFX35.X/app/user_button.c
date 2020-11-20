@@ -156,6 +156,8 @@ uint8_t GetSwitchStatus(void)
 //
 //-------------------------------
 
+static int g_MyButton = 0;
+
 static void UserButtonMonitorTask (void)
 {
     Evt_t event_to_send_beeper_task;
@@ -206,11 +208,11 @@ static void UserButtonMonitorTask (void)
                     // Beep that the button was pushed.
                     if (currentButtonPattern & USER_SWITCH)
                     {
-                        event_to_send_beeper_task = beeperBeep(BEEPER_PATTERN_USER_BUTTON_SHORT_PRESS);
-                        if (event_to_send_beeper_task != NO_EVENT)
-                        {
-                            event_signal(event_to_send_beeper_task);
-                        }
+//                        event_to_send_beeper_task = beeperBeep(BEEPER_PATTERN_USER_BUTTON_SHORT_PRESS);
+//                        if (event_to_send_beeper_task != NO_EVENT)
+//                        {
+//                            event_signal(event_to_send_beeper_task);
+//                        }
                         g_ButtonState = PROCESS_ACTIVE_USER_SWTICH;
                     }
                     else if (currentButtonPattern & MODE_SWITCH)
@@ -222,8 +224,8 @@ static void UserButtonMonitorTask (void)
                         //    event_signal(event_to_send_beeper_task);
                         //}
                         // We added "Mode Switch means Reverse" feature. If it's active, don't active the Mode Pin on the 9-Pin DSub
-                        if ((feature2 & FUNC_FEATURE2_MODE_REVERSE_BIT_MASK) == 0)
-                            GenOutCtrlApp_SetStateAll(GEN_OUT_CTRL_STATE_MODE_ACTIVE);
+//                        if ((feature2 & FUNC_FEATURE2_MODE_REVERSE_BIT_MASK) == 0)
+//                            GenOutCtrlApp_SetStateAll(GEN_OUT_CTRL_STATE_MODE_ACTIVE);
                         g_ButtonState = PROCESS_ACTIVE_MODE_SWTICH;
                     }
                 }
@@ -240,23 +242,40 @@ static void UserButtonMonitorTask (void)
             // then perform the Short Press operation.
             if (currentButtonPattern & USER_SWITCH) // I'm looking only at the User Switch.
             {
-                if (stopwatchTimeElapsed (&btn_mon_stopwatch, false) >= time_for_func_to_trigger_ms[USER_BTN_PRESS_LONG])
+                switch (g_MyButton)
                 {
-                    // Change to next function
-                    if (AppCommonDeviceActiveGet())     // Is this thing active?
-                    {
-                        CarryOutLongPressAction();
-                        // Beep that a feature change is happening
-                        currentFeature = appCommonGetCurrentFeature();
-                        event_to_send_beeper_task = beeperBeep (currentFeature); // (BEEPER_PATTERN_USER_BUTTON_LONG_PRESS);
-                        if (event_to_send_beeper_task != NO_EVENT)
-                        {
-                            event_signal(event_to_send_beeper_task);
-                        }
-                        // Annunciate the new feature
-                    }
-                    g_ButtonState = WAIT_FOR_NO_SWITCHES;
+                    case 0:
+                        GenOutCtrlApp_SetStateAll(GEN_OUT_FORWARD_PAD_ACTIVE);
+  //                      event_signal(genOutCtrlAppWakeEvent());
+                        break;
+                    case 1:
+                        GenOutCtrlApp_SetStateAll(GEN_OUT_REVERSE_PAD_ACTIVE);
+                        break;
+                    case 2:
+                        GenOutCtrlApp_SetStateAll(GEN_OUT_LEFT_PAD_ACTIVE);
+                        break;
+                    case 3:
+                        GenOutCtrlApp_SetStateAll(GEN_OUT_RIGHT_PAD_ACTIVE);
+                        break;
                 }
+                g_ButtonState = WAIT_FOR_NO_SWITCHES;
+//                if (stopwatchTimeElapsed (&btn_mon_stopwatch, false) >= time_for_func_to_trigger_ms[USER_BTN_PRESS_LONG])
+//                {
+//                    // Change to next function
+//                    if (AppCommonDeviceActiveGet())     // Is this thing active?
+//                    {
+//                        CarryOutLongPressAction();
+//                        // Beep that a feature change is happening
+//                        currentFeature = appCommonGetCurrentFeature();
+//                        event_to_send_beeper_task = beeperBeep (currentFeature); // (BEEPER_PATTERN_USER_BUTTON_LONG_PRESS);
+//                        if (event_to_send_beeper_task != NO_EVENT)
+//                        {
+//                            event_signal(event_to_send_beeper_task);
+//                        }
+//                        // Annunciate the new feature
+//                    }
+//                    g_ButtonState = WAIT_FOR_NO_SWITCHES;
+//                }
 
             }
             else // button was released.
@@ -273,8 +292,8 @@ static void UserButtonMonitorTask (void)
             if ((currentButtonPattern & MODE_SWITCH) == 0)
             {
                 // We added a "Mode Swith is Reverse" feature. If it's active, don't affect the Mode Pin.
-                if ((feature2 & FUNC_FEATURE2_MODE_REVERSE_BIT_MASK) == 0)
-                    GenOutCtrlApp_SetStateAll(GEN_OUT_CTRL_STATE_MODE_INACTIVE);
+//                if ((feature2 & FUNC_FEATURE2_MODE_REVERSE_BIT_MASK) == 0)
+//                    GenOutCtrlApp_SetStateAll(GEN_OUT_CTRL_STATE_MODE_INACTIVE);
                 // To annunciate Mode Switch release, uncomment the following.
                 //event_to_send_beeper_task = beeperBeep (BEEPER_PATTERN_USER_BUTTON_SHORT_PRESS); // (BEEPER_PATTERN_USER_BUTTON_LONG_PRESS);
                 //if (event_to_send_beeper_task != NO_EVENT)
@@ -298,6 +317,24 @@ static void UserButtonMonitorTask (void)
                 {
                     g_ButtonState = INIT_BUTTON_STATE; // essentially, start from scratch.
                     stopwatchStop(&btn_mon_stopwatch);      // Stop the timer
+                    switch (g_MyButton)
+                    {
+                        case 0:
+                            GenOutCtrlApp_SetStateAll(GEN_OUT_FORWARD_PAD_INACTIVE);
+//                            event_signal(genOutCtrlAppWakeEvent());
+                            break;
+                        case 1:
+                            GenOutCtrlApp_SetStateAll(GEN_OUT_REVERSE_PAD_INACTIVE);
+                            break;
+                        case 2:
+                            GenOutCtrlApp_SetStateAll(GEN_OUT_LEFT_PAD_INACTIVE);
+                            break;
+                        case 3:
+                            GenOutCtrlApp_SetStateAll(GEN_OUT_RIGHT_PAD_INACTIVE);
+                            break;
+                    }
+                    ++g_MyButton;
+                    g_MyButton %= 4;
                 }
             }
         }
@@ -349,43 +386,43 @@ static void CarryOutShortPressAction(void)
                 }
 				break;
 
-			case FUNC_FEATURE_OUT_NEXT_FUNCTION:
-                if (AppCommonDeviceActiveGet() == false)    // This occurs if Power Up In Idle is on and
-                                                            // .. we just turned on the system.
-                    AppCommonForceActiveState(true);
-                else
-                    GenOutCtrlApp_SetStateAll(GEN_OUT_CTRL_STATE_STATE_USER_BTN_NEXT_FUNCTION);
-				break;
+//			case FUNC_FEATURE_OUT_NEXT_FUNCTION:
+//                if (AppCommonDeviceActiveGet() == false)    // This occurs if Power Up In Idle is on and
+//                                                            // .. we just turned on the system.
+//                    AppCommonForceActiveState(true);
+//                else
+//                    GenOutCtrlApp_SetStateAll(GEN_OUT_CTRL_STATE_STATE_USER_BTN_NEXT_FUNCTION);
+//				break;
 
-			case FUNC_FEATURE_OUT_NEXT_PROFILE:
-                if (AppCommonDeviceActiveGet() == false)    // This occurs if Power Up In Idle is on and
-                                                            // .. we just turned on the system.
-                    AppCommonForceActiveState(true);
-                else
-    				GenOutCtrlApp_SetStateAll(GEN_OUT_CTRL_STATE_USER_BTN_NEXT_PROFILE);
-				break;
+//			case FUNC_FEATURE_OUT_NEXT_PROFILE:
+//                if (AppCommonDeviceActiveGet() == false)    // This occurs if Power Up In Idle is on and
+//                                                            // .. we just turned on the system.
+//                    AppCommonForceActiveState(true);
+//                else
+//    				GenOutCtrlApp_SetStateAll(GEN_OUT_CTRL_STATE_USER_BTN_NEXT_PROFILE);
+//				break;
 
-       		case FUNC_FEATURE_RNET_SEATING:
-                if (AppCommonDeviceActiveGet() == false)    // This occurs if Power Up In Idle is on and
-                                                            // .. we just turned on the system.
-                    AppCommonForceActiveState(true);
-                else
-    			{
-                   //eepromEnumSet(EEPROM_STORED_ITEM_CURRENT_ACTIVE_FEATURE, FUNC_FEATURE_POWER_ON_OFF);
-                    feature = appCommonGetPreviousEnabledFeature();
-                    eepromEnumSet(EEPROM_STORED_ITEM_CURRENT_ACTIVE_FEATURE, (EepromStoredEnumType_t)feature);
-                }
-				break;
+//       		case FUNC_FEATURE_RNET_SEATING:
+//                if (AppCommonDeviceActiveGet() == false)    // This occurs if Power Up In Idle is on and
+//                                                            // .. we just turned on the system.
+//                    AppCommonForceActiveState(true);
+//                else
+//    			{
+//                   //eepromEnumSet(EEPROM_STORED_ITEM_CURRENT_ACTIVE_FEATURE, FUNC_FEATURE_POWER_ON_OFF);
+//                    feature = appCommonGetPreviousEnabledFeature();
+//                    eepromEnumSet(EEPROM_STORED_ITEM_CURRENT_ACTIVE_FEATURE, (EepromStoredEnumType_t)feature);
+//                }
+//				break;
 
-            case FUNC_FEATURE2_RNET_SLEEP:
-                if (AppCommonDeviceActiveGet() == false)    // This occurs if Power Up In Idle is on and
-                                                            // .. we just turned on the system.
-                    AppCommonForceActiveState(true);
-                else
-    			{
-    				GenOutCtrlApp_SetStateAll(GEN_OUT_CTRL_RNET_SLEEP);
-                }
-                break;
+//            case FUNC_FEATURE2_RNET_SLEEP:
+//                if (AppCommonDeviceActiveGet() == false)    // This occurs if Power Up In Idle is on and
+//                                                            // .. we just turned on the system.
+//                    AppCommonForceActiveState(true);
+//                else
+//    			{
+//    				GenOutCtrlApp_SetStateAll(GEN_OUT_CTRL_RNET_SLEEP);
+//                }
+//                break;
                 
 			default:
 				break;

@@ -85,14 +85,17 @@ typedef uint16_t GenOutCtrlTime_t;
  * definitions match these names and a distinction is needed to be made between the GPIO
  * naming abstraction and the definitions below.
  * 
- * TODO: Make module support groups.  LEDs 0 and 1 are groups. Need to tweak driver to allow pins to be grouped together
  */
 typedef enum
 {
-    GEN_OUT_CTRL_ID_LED0, /// Primary feedback LED
-    GEN_OUT_CTRL_ID_LED1, /// Primary feedback LED
-    GEN_OUT_CTRL_ID_INTERNAL_SYS_ACTION, /// Signal line used by this device to let the system know things like "resetting" and "user button short press"
-    GEN_OUT_CTRL_ID_BT_LED,
+    GEN_OUT_CTRL_ID_FORWARD_PAD_LED,   // Pad Feedback LED
+    GEN_OUT_CTRL_ID_LEFT_PAD_LED,      // Pad Feedback LED
+    GEN_OUT_CTRL_ID_RIGHT_PAD_LED,     // Pad Feedback LED
+    GEN_OUT_CTRL_ID_REVERSE_PAD_LED,   // Pad Feedback LED
+    GEN_OUT_CTRL_ID_POWER_LED,          // LED #1
+            
+//    GEN_OUT_CTRL_ID_INTERNAL_SYS_ACTION, // Signal line used by this device to let the system know things like "resetting" and "user button short press"
+//    GEN_OUT_CTRL_ID_BT_LED,
 
     /// Defines the list size. MUST BE THE LAST ITEM IN THE LIST! Also, this must be in the list.
     GEN_OUT_CTRL_ID_MAX
@@ -115,7 +118,7 @@ typedef enum
     GEN_OUT_CTRL_STATE_BLUETOOTH_OUTPUT,
 
     /// Mode where wheelchair output control is routed to the Bluetooth module
-    GEN_OUT_CTRL_STATE_HEAD_ARRAY_ACTIVE,
+//    GEN_OUT_CTRL_STATE_HEAD_ARRAY_ACTIVE,
     
     /// Mode where there is no control output at all.
     GEN_OUT_CTRL_STATE_NO_OUTPUT,
@@ -125,20 +128,20 @@ typedef enum
     //-------------------------------------------------------------------------
     //
     /// The head array is resetting
-    GEN_OUT_CTRL_STATE_HEAD_ARRAY_RESETTING,
+//    GEN_OUT_CTRL_STATE_HEAD_ARRAY_RESETTING,
 
     /// Buddy button short press invoking next function feature
-    GEN_OUT_CTRL_STATE_STATE_USER_BTN_NEXT_FUNCTION,
+//    GEN_OUT_CTRL_STATE_STATE_USER_BTN_NEXT_FUNCTION,
     
     /// Buddy button short press invoking next profile feature
-    GEN_OUT_CTRL_STATE_USER_BTN_NEXT_PROFILE,
+//    GEN_OUT_CTRL_STATE_USER_BTN_NEXT_PROFILE,
             
     /// Mode Button input control when pressed and when released.
     GEN_OUT_CTRL_STATE_MODE_ACTIVE,
     GEN_OUT_CTRL_STATE_MODE_INACTIVE,
     
     /// User Port button is pressed while RNET SLEEP is active
-    GEN_OUT_CTRL_RNET_SLEEP,
+//    GEN_OUT_CTRL_RNET_SLEEP,
             
     //-------------------------------------------------------------------------
     // Output controller agnostic states
@@ -148,6 +151,17 @@ typedef enum
     GEN_OUT_STATE_CTRL_TEST,
     GEN_OUT_BLUETOOTH_ENABLED,
     GEN_OUT_BLUETOOTH_DISABLED,
+            
+    // Control for individual Pad LED's
+    GEN_OUT_FORWARD_PAD_ACTIVE,
+    GEN_OUT_FORWARD_PAD_INACTIVE,
+    GEN_OUT_REVERSE_PAD_ACTIVE,
+    GEN_OUT_REVERSE_PAD_INACTIVE,
+    GEN_OUT_LEFT_PAD_ACTIVE,
+    GEN_OUT_LEFT_PAD_INACTIVE,
+    GEN_OUT_RIGHT_PAD_ACTIVE,
+    GEN_OUT_RIGHT_PAD_INACTIVE,
+            
 
     /// Defines the list size. MUST EXIST AND BE THE LAST ITEM IN THE LIST!
     GEN_OUT_CTRL_STATE_MAX

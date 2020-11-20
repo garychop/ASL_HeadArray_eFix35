@@ -102,24 +102,27 @@
 #endif // PCB_REV3
 
 #else
-//    #define INTERNAL_SYS_ACTION_SIGNAL_IS_ACTIVE()	(LATCbits.LATC7 == GPIO_HIGH)
-//    #define INTERNAL_SYS_ACTION_SIGNAL_SET(active)	INLINE_EXPR(LATCbits.LATC7 = active ? GPIO_HIGH : GPIO_LOW)
-//    #define INTERNAL_SYS_ACTION_SIGNAL_TOGGLE()		INLINE_EXPR(INTERNAL_SYS_ACTION_SIGNAL_SET(!INTERNAL_SYS_ACTION_SIGNAL_IS_ACTIVE()))
-//    #define INTERNAL_SYS_ACTION_SIGNAL_INIT()		INLINE_EXPR(TRISCbits.TRISC7 = GPIO_BIT_OUTPUT; INTERNAL_SYS_ACTION_SIGNAL_SET(false))
-//    #define INTERNAL_SYS_ACTION_SIGNAL_DEINIT()		INLINE_EXPR(TRISCbits.TRISC7 = GPIO_BIT_INPUT)
+//    #define LED1_FWD_SIGNAL_IS_ACTIVE()					((LATCbits.LATC0 == GPIO_LOW) && (LATCbits.LATC6 == GPIO_HIGH))
+//    #define LED1_FWD_SIGNAL_SET(active)					INLINE_EXPR(LATCbits.LATC0 = GPIO_LOW; LATCbits.LATC6 = active ? GPIO_HIGH : GPIO_LOW)
+//    #define LED1_FWD_SIGNAL_TOGGLE()					INLINE_EXPR(LED0_SIGNAL_SET(!LED0_SIGNAL_IS_ACTIVE()))
 //
-//    // LEDs 0 and 1 are Charlieplexed
-//    #define LED0_SIGNAL_IS_ACTIVE()					((LATCbits.LATC0 == GPIO_LOW) && (LATCbits.LATC6 == GPIO_HIGH))
-//    #define LED0_SIGNAL_SET(active)					INLINE_EXPR(LATCbits.LATC0 = GPIO_LOW; LATCbits.LATC6 = active ? GPIO_HIGH : GPIO_LOW)
-//    #define LED0_SIGNAL_TOGGLE()					INLINE_EXPR(LED0_SIGNAL_SET(!LED0_SIGNAL_IS_ACTIVE()))
-//
-//    #define LED1_SIGNAL_IS_ACTIVE()					((LATCbits.LATC0 == GPIO_HIGH) && (LATCbits.LATC6 == GPIO_LOW))
-//    #define LED1_SIGNAL_SET(active)					INLINE_EXPR(LATCbits.LATC0 = active ? GPIO_HIGH : GPIO_LOW; LATCbits.LATC6 = GPIO_LOW)
-//    #define LED1_SIGNAL_TOGGLE()					INLINE_EXPR(LED1_SIGNAL_SET(!LED1_SIGNAL_IS_ACTIVE()))
-//
-//    #define LED0and1_SIGNAL_INIT()					INLINE_EXPR(TRISCbits.TRISC0 = GPIO_BIT_OUTPUT; TRISCbits.TRISC6 = GPIO_BIT_OUTPUT; LED0_SIGNAL_SET(false))
-//    #define LED0and1_SIGNAL_DEINIT()				INLINE_EXPR(TRISCbits.TRISC0 = GPIO_BIT_INPUT; TRISCbits.TRISC6 = GPIO_BIT_INPUT)
+//    #define LED2_LEFT_SIGNAL_IS_ACTIVE()				((LATCbits.LATC0 == GPIO_HIGH) && (LATCbits.LATC6 == GPIO_LOW))
+//    #define LED2_LEFT_SIGNAL_SET(active)				INLINE_EXPR(LATCbits.LATC0 = active ? GPIO_HIGH : GPIO_LOW; LATCbits.LATC6 = GPIO_LOW)
+//    #define LED2_LEFT_SIGNAL_TOGGLE()					INLINE_EXPR(LED1_SIGNAL_SET(!LED1_SIGNAL_IS_ACTIVE()))
+
 #endif
+
+    // The Bluetooth LED is supported on the ASL104.
+    // Bluetooth BLUE LED control macros
+// TODO: Investigate why RC5 is not available.
+//    #define BLUETOOTH_LED_SIGNAL_IS_ACTIVE()        (LATCbits.LATC5 == GPIO_HIGH)
+//    #define BLUETOOTH_LED_SIGNAL_SET(active)        INLINE_EXPR(LATCbits.LATC5 = active ? GPIO_HIGH : GPIO_LOW)
+//    #define BLUETOOTH_LED_SIGNAL_TOGGLE()           INLINE_EXPR(BLUETOOTH_LED_SIGNAL_SET(!BLUETOOTH_LED_SIGNAL_IS_ACTIVE()))
+//    #define BLUETOOTH_LED_SIGNAL_INIT()             INLINE_EXPR(TRISCbits.TRISC5 = GPIO_BIT_OUTPUT; BLUETOOTH_LED_SIGNAL_SET(false))
+//    #define BLUETOOTH_LED_SIGNAL_DEINIT()   		INLINE_EXPR(TRISCbits.TRISC5 = GPIO_BIT_INPUT;)
+
+
+
 
 /*
  ********************************************************************************************************
@@ -163,40 +166,55 @@
 bool GenOutCtrlBsp_Enable(GenOutCtrlId_t item_id)
 {
 	bool ret_val = true;
-//
-//	switch (item_id)
-//	{
-//		case GEN_OUT_CTRL_ID_LED0:
-//			// Primary feedback LED
-//			LED0and1_SIGNAL_INIT();
-//			break;
-//			
-//    	case GEN_OUT_CTRL_ID_LED1:
-//			// Primary feedback LED
-//			LED0and1_SIGNAL_INIT();
-//			break;
-//
+
+	switch (item_id)
+	{
+        case GEN_OUT_CTRL_ID_POWER_LED:             // Power LED
+            TRISEbits.TRISE0 = GPIO_BIT_OUTPUT;     // LED1 control
+            LATEbits.LATE0 = GPIO_HIGH;             // This turns the LED off
+            break;
+            
+        case GEN_OUT_CTRL_ID_FORWARD_PAD_LED:       // Forward Pad Feedback LED
+            TRISEbits.TRISE1 = GPIO_BIT_OUTPUT;     // LED #5 control.
+            LATEbits.LATE1 = GPIO_HIGH;
+            break;
+
+        case GEN_OUT_CTRL_ID_LEFT_PAD_LED:          // Left Pad Feedback LED
+            TRISCbits.TRISC0 = GPIO_BIT_OUTPUT;     // LED2 control
+            LATCbits.LATC0 = GPIO_HIGH;             // This turns the LED off
+            break;
+
+        case GEN_OUT_CTRL_ID_RIGHT_PAD_LED:         // Right Pad Feedback LED
+            TRISEbits.TRISE2 = GPIO_BIT_OUTPUT;     // LED3 control
+            LATEbits.LATE2 = GPIO_HIGH;             // This turns the LED off
+            break;
+            
+        case GEN_OUT_CTRL_ID_REVERSE_PAD_LED:       // Reverse Pad Feedback LED
+            TRISAbits.TRISA1 = GPIO_BIT_OUTPUT;     // LED4 control
+            LATAbits.LATA1 = GPIO_HIGH;             // This turns the LED off
+            break;
+            
 //    	case GEN_OUT_CTRL_ID_INTERNAL_SYS_ACTION:
 //			// Signal line used by this device to let the system know things like "resetting" and "user button short press"
 //			INTERNAL_SYS_ACTION_SIGNAL_INIT();
 //			break;
 //            
-//        // The Bluetooth LED is being controlled by either enabling the port as an
-//        // output or as an input. This operation is being controlled elsewhere.
-//        // This function is called by a function that initializes all I/O.
-//        // We will initialize the pin as an output here to turn off the Blue
-//        // LED but will have to turn it on if the "Using Bluetooth" feature
-//        // is turned on.
+        // The Bluetooth LED is being controlled by either enabling the port as an
+        // output or as an input. This operation is being controlled elsewhere.
+        // This function is called by a function that initializes all I/O.
+        // We will initialize the pin as an output here to turn off the Blue
+        // LED but will have to turn it on if the "Using Bluetooth" feature
+        // is turned on.
 //        case GEN_OUT_CTRL_ID_BT_LED:
 //            BLUETOOTH_LED_SIGNAL_INIT(); 
 //            break;
-//
-//	   	case GEN_OUT_CTRL_ID_MAX:
-//	   	default:
-//		   	ret_val = false;
-//		   	return false;
-//	}
-//	
+
+	   	case GEN_OUT_CTRL_ID_MAX:
+	   	default:
+		   	ret_val = false;
+		   	return false;
+	}
+	
 	assert(ret_val);
 	return ret_val;
 }
@@ -211,19 +229,29 @@ bool GenOutCtrlBsp_Enable(GenOutCtrlId_t item_id)
 bool GenOutCtrlBsp_Disable(GenOutCtrlId_t item_id)
 {
 	bool ret_val = true;
-//
-//	switch (item_id)
-//	{
-//		case GEN_OUT_CTRL_ID_LED0:
-//			// Primary feedback LED
-//			LED0and1_SIGNAL_DEINIT();
-//			break;
-//			
-//    	case GEN_OUT_CTRL_ID_LED1:
-//			// Primary feedback LED
-//			LED0and1_SIGNAL_DEINIT();
-//			break;
-//
+
+	switch (item_id)
+	{
+        case GEN_OUT_CTRL_ID_POWER_LED:             // Power LED
+            TRISEbits.TRISE0 = GPIO_BIT_INPUT;      // LED1 control
+            break;
+            
+        case GEN_OUT_CTRL_ID_FORWARD_PAD_LED:       // Forward Pad Feedback LED
+            TRISEbits.TRISE1 = GPIO_BIT_INPUT;      // LED #5 control.
+            break;
+
+        case GEN_OUT_CTRL_ID_LEFT_PAD_LED:          // Left Pad Feedback LED
+            TRISCbits.TRISC0 = GPIO_BIT_INPUT;      // LED2 control
+            break;
+
+        case GEN_OUT_CTRL_ID_RIGHT_PAD_LED:         // Right Pad Feedback LED
+            TRISEbits.TRISE2 = GPIO_BIT_INPUT;      // LED3 control
+            break;
+            
+        case GEN_OUT_CTRL_ID_REVERSE_PAD_LED:       // Reverse Pad Feedback LED
+            TRISAbits.TRISA1 = GPIO_BIT_INPUT;      // LED4 control
+            break;
+            
 //    	case GEN_OUT_CTRL_ID_INTERNAL_SYS_ACTION:
 //			// Signal line used by this device to let the system know things like "resetting" and "user button short press"
 //			INTERNAL_SYS_ACTION_SIGNAL_DEINIT();
@@ -232,12 +260,12 @@ bool GenOutCtrlBsp_Disable(GenOutCtrlId_t item_id)
 //        case GEN_OUT_CTRL_ID_BT_LED:
 //            BLUETOOTH_LED_SIGNAL_DEINIT();
 //            break;
-//            
-//	   	case GEN_OUT_CTRL_ID_MAX:
-//	   	default:
-//		   	ret_val = false;
-//		   	return false;
-//	}
+            
+	   	case GEN_OUT_CTRL_ID_MAX:
+	   	default:
+		   	ret_val = false;
+		   	return false;
+	}
 //	
 	assert(ret_val);
 	return ret_val;
@@ -253,33 +281,49 @@ bool GenOutCtrlBsp_Disable(GenOutCtrlId_t item_id)
 bool GenOutCtrlBsp_SetActive(GenOutCtrlId_t item_id)
 {
 	bool ret_val = true;
-//    
-//	switch (item_id)
-//	{
-//		case GEN_OUT_CTRL_ID_LED0:
-//			// Primary feedback LED
-//			LED0_SIGNAL_SET(true);
-//			break;
-//			
-//    	case GEN_OUT_CTRL_ID_LED1:
-//			// Primary feedback LED
-//			LED1_SIGNAL_SET(true);
-//			break;
-//
+    
+	switch (item_id)
+	{
+        case GEN_OUT_CTRL_ID_POWER_LED:            // Power LED
+            LATEbits.LATE0 = GPIO_LOW;             // This turns the LED #1 on
+            break;
+
+        case GEN_OUT_CTRL_ID_FORWARD_PAD_LED:       // Forward Pad Feedback LED
+            LATEbits.LATE1 = GPIO_LOW;             // This turns the LED #5 on
+            break;
+            
+        case GEN_OUT_CTRL_ID_LEFT_PAD_LED:          // Left Pad Feedback LED
+            LATCbits.LATC0 = GPIO_LOW;             // This turns the LED on
+            break;
+
+        case GEN_OUT_CTRL_ID_RIGHT_PAD_LED:         // Right Pad Feedback LED
+            LATEbits.LATE2 = GPIO_LOW;             // This turns the LED on
+            break;
+            
+        case GEN_OUT_CTRL_ID_REVERSE_PAD_LED:       // Reverse Pad Feedback LED
+            LATAbits.LATA1 = GPIO_LOW;             // This turns the LED on
+            break;
+            
 //    	case GEN_OUT_CTRL_ID_INTERNAL_SYS_ACTION:
 //			// Signal line used by this device to let the system know things like "resetting" and "user button short press"
-//			INTERNAL_SYS_ACTION_SIGNAL_SET(true);
+//			INTERNAL_SYS_ACTION_SIGNAL_INIT();
 //			break;
 //            
+        // The Bluetooth LED is being controlled by either enabling the port as an
+        // output or as an input. This operation is being controlled elsewhere.
+        // This function is called by a function that initializes all I/O.
+        // We will initialize the pin as an output here to turn off the Blue
+        // LED but will have to turn it on if the "Using Bluetooth" feature
+        // is turned on.
 //        case GEN_OUT_CTRL_ID_BT_LED:
-//            BLUETOOTH_LED_SIGNAL_SET(true);  // Turn on the LED
+//            BLUETOOTH_LED_SIGNAL_INIT(); 
 //            break;
-//
-//	   	case GEN_OUT_CTRL_ID_MAX:
-//	   	default:
-//		  	break; // Intentionally do nothing.
-//	}
-//	
+
+	   	case GEN_OUT_CTRL_ID_MAX:
+	   	default:
+		   	ret_val = false;
+		   	return false;
+	}
 	assert(ret_val);
 	return ret_val;
 }
@@ -294,33 +338,50 @@ bool GenOutCtrlBsp_SetActive(GenOutCtrlId_t item_id)
 bool GenOutCtrlBsp_SetInactive(GenOutCtrlId_t item_id)
 {
 	bool ret_val = true;
-//
-//	switch (item_id)
-//	{
-//		case GEN_OUT_CTRL_ID_LED0:
-//			// Primary feedback LED
-//			LED0_SIGNAL_SET(false);
-//			break;
-//			
-//    	case GEN_OUT_CTRL_ID_LED1:
-//			// Primary feedback LED
-//			LED1_SIGNAL_SET(false);
-//			break;
-//
+
+	switch (item_id)
+	{
+        case GEN_OUT_CTRL_ID_POWER_LED:            // Power LED
+            LATEbits.LATE0 = GPIO_HIGH;             // This turns the LED off #1
+            break;
+
+        case GEN_OUT_CTRL_ID_FORWARD_PAD_LED:       // Forward Pad Feedback LED
+            LATEbits.LATE1 = GPIO_HIGH;             // This turns the LED #5 off
+            break;
+
+        case GEN_OUT_CTRL_ID_LEFT_PAD_LED:          // Left Pad Feedback LED
+            LATCbits.LATC0 = GPIO_HIGH;             // This turns the LED off
+            break;
+
+        case GEN_OUT_CTRL_ID_RIGHT_PAD_LED:         // Right Pad Feedback LED
+            LATEbits.LATE2 = GPIO_HIGH;             // This turns the LED off
+            break;
+            
+        case GEN_OUT_CTRL_ID_REVERSE_PAD_LED:       // Reverse Pad Feedback LED
+            LATAbits.LATA1 = GPIO_HIGH;             // This turns the LED off
+            break;
+            
 //    	case GEN_OUT_CTRL_ID_INTERNAL_SYS_ACTION:
 //			// Signal line used by this device to let the system know things like "resetting" and "user button short press"
-//			INTERNAL_SYS_ACTION_SIGNAL_SET(false);
+//			INTERNAL_SYS_ACTION_SIGNAL_INIT();
 //			break;
 //            
+        // The Bluetooth LED is being controlled by either enabling the port as an
+        // output or as an input. This operation is being controlled elsewhere.
+        // This function is called by a function that initializes all I/O.
+        // We will initialize the pin as an output here to turn off the Blue
+        // LED but will have to turn it on if the "Using Bluetooth" feature
+        // is turned on.
 //        case GEN_OUT_CTRL_ID_BT_LED:
-//            BLUETOOTH_LED_SIGNAL_SET(false);  // Turn off the LED.
+//            BLUETOOTH_LED_SIGNAL_INIT(); 
 //            break;
-//		
-//	   	case GEN_OUT_CTRL_ID_MAX:
-//	   	default:
-//		   	break; // Intentionally do nothing.
-//	}
-//
+
+	   	case GEN_OUT_CTRL_ID_MAX:
+	   	default:
+		   	ret_val = false;
+		   	return false;
+	}
+
 	assert(ret_val);
 	return ret_val;
 }
@@ -336,32 +397,49 @@ bool GenOutCtrlBsp_Toggle(GenOutCtrlId_t item_id)
 {
 	bool ret_val = true;
 
-//	switch (item_id)
-//	{
-//		case GEN_OUT_CTRL_ID_LED0:
-//			// Primary feedback LED
-//			LED0_SIGNAL_TOGGLE();
-//			break;
-//			
-//    	case GEN_OUT_CTRL_ID_LED1:
-//			// Primary feedback LED
-//			LED1_SIGNAL_TOGGLE();
-//			break;
-//
+	switch (item_id)
+	{
+        case GEN_OUT_CTRL_ID_POWER_LED:            // Power LED
+            LATEbits.LATE0 = (LATEbits.LATE0 == GPIO_HIGH ? GPIO_LOW : GPIO_HIGH);             // This turns the LED #1 off
+            break;
+            
+        case GEN_OUT_CTRL_ID_FORWARD_PAD_LED:       // Forward Pad Feedback LED
+            LATEbits.LATE1 = (LATEbits.LATE1 == GPIO_HIGH ? GPIO_LOW : GPIO_HIGH);             // This turns the LED #5 off
+            break;
+
+        case GEN_OUT_CTRL_ID_LEFT_PAD_LED:          // Left Pad Feedback LED
+            LATCbits.LATC0 = (LATCbits.LATC0 == GPIO_HIGH ? GPIO_LOW : GPIO_HIGH);             // This turns the LED #2 off
+            break;
+
+        case GEN_OUT_CTRL_ID_RIGHT_PAD_LED:         // Right Pad Feedback LED
+            LATEbits.LATE2 = (LATEbits.LATE2 == GPIO_HIGH ? GPIO_LOW : GPIO_HIGH);             // This turns the LED #3 off
+            break;
+            
+        case GEN_OUT_CTRL_ID_REVERSE_PAD_LED:       // Reverse Pad Feedback LED
+            LATAbits.LATA1 = (LATAbits.LATA1 == GPIO_HIGH ? GPIO_LOW : GPIO_HIGH);             // This turns the LED #4 off
+            break;
+            
 //    	case GEN_OUT_CTRL_ID_INTERNAL_SYS_ACTION:
 //			// Signal line used by this device to let the system know things like "resetting" and "user button short press"
-//			INTERNAL_SYS_ACTION_SIGNAL_TOGGLE();
+//			INTERNAL_SYS_ACTION_SIGNAL_INIT();
 //			break;
-//
+//            
+        // The Bluetooth LED is being controlled by either enabling the port as an
+        // output or as an input. This operation is being controlled elsewhere.
+        // This function is called by a function that initializes all I/O.
+        // We will initialize the pin as an output here to turn off the Blue
+        // LED but will have to turn it on if the "Using Bluetooth" feature
+        // is turned on.
 //        case GEN_OUT_CTRL_ID_BT_LED:
-//            BLUETOOTH_LED_SIGNAL_TOGGLE ();
+//            BLUETOOTH_LED_SIGNAL_INIT(); 
 //            break;
-//		
-//	   case GEN_OUT_CTRL_ID_MAX:
-//	   default:
-//		   break; // Intentionally do nothing.
-//	}
-//	
+
+	   	case GEN_OUT_CTRL_ID_MAX:
+	   	default:
+		   	ret_val = false;
+		   	return false;
+	}
+	
 	assert(ret_val);
 	return ret_val;
 }
@@ -369,7 +447,7 @@ bool GenOutCtrlBsp_Toggle(GenOutCtrlId_t item_id)
 // End of Doxygen grouping
 /** @} */
 
-#endif
+#endif  // #if defined(GENERAL_OUTPUT_CTRL_MODULE_ENABLE)
 
 /**********************************************************************************************************************
 ---          End of File          ------          End of File          ------          End of File          ---

@@ -572,13 +572,13 @@ static bool SendStateRequestToLedControlModule(void)
 	GenOutState_t led_ctrl_state;
 
     // If the Head Array is allowed to issue drive commands, turn on Green LED.
-	if ( (curr_active_feature == FUNC_FEATURE_POWER_ON_OFF)
-        || (curr_active_feature == FUNC_FEATURE_OUT_NEXT_FUNCTION)
-        || (curr_active_feature == FUNC_FEATURE_OUT_NEXT_PROFILE))
-	{
-		led_ctrl_state = GEN_OUT_CTRL_STATE_HEAD_ARRAY_ACTIVE;
-	}
-	else if (curr_active_feature == FUNC_FEATURE_OUT_CTRL_TO_BT_MODULE)
+//	if ( (curr_active_feature == FUNC_FEATURE_POWER_ON_OFF)
+//        || (curr_active_feature == FUNC_FEATURE_OUT_NEXT_FUNCTION)
+//        || (curr_active_feature == FUNC_FEATURE_OUT_NEXT_PROFILE))
+//	{
+//		led_ctrl_state = GEN_OUT_CTRL_STATE_HEAD_ARRAY_ACTIVE;
+//	}
+	if (curr_active_feature == FUNC_FEATURE_OUT_CTRL_TO_BT_MODULE)
 	{
 		led_ctrl_state = GEN_OUT_CTRL_STATE_BLUETOOTH_OUTPUT;
 	}
