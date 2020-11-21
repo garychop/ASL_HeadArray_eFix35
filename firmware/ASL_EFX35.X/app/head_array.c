@@ -32,7 +32,7 @@
 #include "stopwatch.h"
 #include "bluetooth_simple_if_bsp.h"
 #include "eeprom_app.h"
-#include "dac_bsp.h"
+//#include "dac_bsp.h"
 #include "general_output_ctrl_app.h"
 #include "app_common.h"
 
@@ -71,12 +71,12 @@
 // Right = UPPER RAIL = 1
 // Forward = UPPER RAIL = 1
 // Reverse = LOWER RAIL = -1
-#define DAC_LEFT_DAC_VAL_MANIP_DIR (-1)     // ((DAC_LEFT_MAX_DAC_VAL > DAC_NEUTRAL_DAC_VAL) 	? ((int8_t)1) : ((int8_t)-1))
-#define DAC_RIGHT_DAC_VAL_MANIP_DIR (1)     // ((DAC_RIGHT_MAX_DAC_VAL > DAC_NEUTRAL_DAC_VAL) 	? ((int8_t)1) : ((int8_t)-1))
-#define DAC_FWD_DAC_VAL_MANIP_DIR (1)		//	((DAC_FWD_MAX_DAC_VAL > DAC_NEUTRAL_DAC_VAL) 	? ((int8_t)1) : ((int8_t)-1))
-#define DAC_REV_DAC_VAL_MANIP_DIR (-1)		//	((DAC_REV_MAX_DAC_VAL > DAC_NEUTRAL_DAC_VAL) 	? ((int8_t)1) : ((int8_t)-1))
-
-#define PROP_UNINITIALIZED_VAL					(0)
+//#define DAC_LEFT_DAC_VAL_MANIP_DIR (-1)     // ((DAC_LEFT_MAX_DAC_VAL > DAC_NEUTRAL_DAC_VAL) 	? ((int8_t)1) : ((int8_t)-1))
+//#define DAC_RIGHT_DAC_VAL_MANIP_DIR (1)     // ((DAC_RIGHT_MAX_DAC_VAL > DAC_NEUTRAL_DAC_VAL) 	? ((int8_t)1) : ((int8_t)-1))
+//#define DAC_FWD_DAC_VAL_MANIP_DIR (1)		//	((DAC_FWD_MAX_DAC_VAL > DAC_NEUTRAL_DAC_VAL) 	? ((int8_t)1) : ((int8_t)-1))
+//#define DAC_REV_DAC_VAL_MANIP_DIR (-1)		//	((DAC_REV_MAX_DAC_VAL > DAC_NEUTRAL_DAC_VAL) 	? ((int8_t)1) : ((int8_t)-1))
+//
+//#define PROP_UNINITIALIZED_VAL					(0)
 
 // Time to wait before claiming the system is in a neutral control state.
 #define NEUTRAL_STATE_MIN_TIME_TO_CHECK_ms 		(750)   // 2 seconds is too long.
@@ -85,46 +85,52 @@
 
 // Type of input, or input disabled, function for each pad.
 // Default values are set in eeprom_app.c
-static volatile HeadArrayInputType_t head_arr_input_type[(int)HEAD_ARRAY_SENSOR_EOL];
+//static volatile HeadArrayInputType_t head_arr_input_type[(int)HEAD_ARRAY_SENSOR_EOL];
 
 // Each index refers to the input pad, and the value at an index refers to the output pad.
 // Default values are set in eeprom_app.c
-static volatile HeadArrayOutputFunction_t input_pad_to_output_pad_map[(int)HEAD_ARRAY_SENSOR_EOL];
+//static volatile HeadArrayOutputFunction_t input_pad_to_output_pad_map[(int)HEAD_ARRAY_SENSOR_EOL];
 
 static volatile FunctionalFeature_t curr_active_feature;
 
+struct 
+{
+    bool m_CurrentPadStatus;
+    bool m_PreviousPadStatus;
+} g_PadInfo[HEAD_ARRAY_SENSOR_EOL];
+
 // Last recorded values for digital and proportional input states.
-static volatile bool pad_dig_state[(int)HEAD_ARRAY_SENSOR_EOL];
-static volatile uint16_t pad_prop_state[(int)HEAD_ARRAY_SENSOR_EOL];
-static volatile uint16_t pad_raw_prop_state[(int)HEAD_ARRAY_SENSOR_EOL];
-static volatile uint16_t pad_adc_min_thresh_val[(int)HEAD_ARRAY_SENSOR_EOL];
-static volatile uint16_t pad_adc_max_thresh_val[(int)HEAD_ARRAY_SENSOR_EOL];
-
-static volatile uint16_t pad_min_adc_val[(int)HEAD_ARRAY_SENSOR_EOL];
-static volatile uint16_t pad_max_adc_val[(int)HEAD_ARRAY_SENSOR_EOL];
-static volatile uint16_t pad_min_thresh_perc[(int)HEAD_ARRAY_SENSOR_EOL];
-static volatile uint16_t pad_max_thresh_perc[(int)HEAD_ARRAY_SENSOR_EOL];
-static volatile uint16_t pad_MinDriveSpeed[(int)HEAD_ARRAY_SENSOR_EOL];
-static volatile uint16_t DAC_Proportional_percent[(int)HEAD_ARRAY_SENSOR_EOL];
-static volatile uint16_t DAC_Minimum_percent[(int)HEAD_ARRAY_SENSOR_EOL];
-
-static volatile uint16_t neutral_DAC_counts;        // This holds the DAC counts constant, used as the center of the DAC output.
-static volatile uint16_t neutral_DAC_setting;       // The DAC counts used.
-static volatile uint16_t neutral_DAC_range;         // This is the allowable range of the voltage swing in counts.
-static volatile uint16_t DAC_lower_rail;
-static volatile uint16_t DAC_upper_rail;
-static volatile uint16_t DAC_max_forward_counts;
-static volatile uint16_t DAC_max_left_counts;
-static volatile uint16_t DAC_max_right_counts;
-static volatile uint16_t DAC_max_reverse_counts;
+//static volatile bool pad_dig_state[(int)HEAD_ARRAY_SENSOR_EOL];
+//static volatile uint16_t pad_prop_state[(int)HEAD_ARRAY_SENSOR_EOL];
+//static volatile uint16_t pad_raw_prop_state[(int)HEAD_ARRAY_SENSOR_EOL];
+//static volatile uint16_t pad_adc_min_thresh_val[(int)HEAD_ARRAY_SENSOR_EOL];
+//static volatile uint16_t pad_adc_max_thresh_val[(int)HEAD_ARRAY_SENSOR_EOL];
+//
+//static volatile uint16_t pad_min_adc_val[(int)HEAD_ARRAY_SENSOR_EOL];
+//static volatile uint16_t pad_max_adc_val[(int)HEAD_ARRAY_SENSOR_EOL];
+//static volatile uint16_t pad_min_thresh_perc[(int)HEAD_ARRAY_SENSOR_EOL];
+//static volatile uint16_t pad_max_thresh_perc[(int)HEAD_ARRAY_SENSOR_EOL];
+//static volatile uint16_t pad_MinDriveSpeed[(int)HEAD_ARRAY_SENSOR_EOL];
+//static volatile uint16_t DAC_Proportional_percent[(int)HEAD_ARRAY_SENSOR_EOL];
+//static volatile uint16_t DAC_Minimum_percent[(int)HEAD_ARRAY_SENSOR_EOL];
+//
+//static volatile uint16_t neutral_DAC_counts;        // This holds the DAC counts constant, used as the center of the DAC output.
+//static volatile uint16_t neutral_DAC_setting;       // The DAC counts used.
+//static volatile uint16_t neutral_DAC_range;         // This is the allowable range of the voltage swing in counts.
+//static volatile uint16_t DAC_lower_rail;
+//static volatile uint16_t DAC_upper_rail;
+//static volatile uint16_t DAC_max_forward_counts;
+//static volatile uint16_t DAC_max_left_counts;
+//static volatile uint16_t DAC_max_right_counts;
+//static volatile uint16_t DAC_max_reverse_counts;
 //static volatile uint16_t DAC_Proportional_percent;
 //static volatile uint16_t DAC_Minimum_percent;
 
 // Must match exactly with the ordering in HeadArrayOutputFunction_t.
-static const int8_t dac_output_manip_dir[(int)HEAD_ARRAY_OUT_FUNC_EOL] =
-{
-	DAC_LEFT_DAC_VAL_MANIP_DIR, DAC_RIGHT_DAC_VAL_MANIP_DIR, DAC_FWD_DAC_VAL_MANIP_DIR, DAC_REV_DAC_VAL_MANIP_DIR
-};
+//static const int8_t dac_output_manip_dir[(int)HEAD_ARRAY_OUT_FUNC_EOL] =
+//{
+//	DAC_LEFT_DAC_VAL_MANIP_DIR, DAC_RIGHT_DAC_VAL_MANIP_DIR, DAC_FWD_DAC_VAL_MANIP_DIR, DAC_REV_DAC_VAL_MANIP_DIR
+//};
 
 static volatile bool wait_for_neutral = false;
 static volatile bool neutral_test_fail = false;
@@ -136,14 +142,15 @@ static void CheckInputs(void);
 static bool SetOutputs(void);
 
 static bool SendStateRequestToLedControlModule(void);
-static void MirrorUpdateDigitalInputValues(void);
-static void MirrorUpdateProportionalInputValues(void);
+//static void MirrorUpdateDigitalInputValues(void);
+static void UpdatePadStatus(void);
+//static void MirrorUpdateProportionalInputValues(void);
 static void MirrorDigitalInputOnBluetoothOutput(void);
-static uint16_t ConvertPropInToOutValue(uint8_t sensor_id);
+//static uint16_t ConvertPropInToOutValue(uint8_t sensor_id);
 
 static bool InNeutralState(void);
 static bool SyncWithEeprom(void);
-static void RefreshLimits(void);
+//static void RefreshLimits(void);
 
 #if defined(TEST_BASIC_DAC_CONTROL)
 	static void TestBasicDacControl(void);
@@ -162,11 +169,14 @@ void headArrayinit(void)
 	// Initialize other data
 	for (int i = 0; i < (int)HEAD_ARRAY_SENSOR_EOL; i++)
 	{
-		pad_dig_state[i] = false;
-		pad_prop_state[i] = PROP_UNINITIALIZED_VAL;
-		pad_raw_prop_state[i] = PROP_UNINITIALIZED_VAL;
+//		pad_dig_state[i] = false;
+//		pad_prop_state[i] = PROP_UNINITIALIZED_VAL;
+//		pad_raw_prop_state[i] = PROP_UNINITIALIZED_VAL;
+        g_PadInfo[i].m_CurrentPadStatus = false;
+        g_PadInfo[i].m_PreviousPadStatus = false;
 	}
 
+    
 	// Initialize all submodules controlled by this module.
 	headArrayBspInit();
 	bluetoothSimpleIfBspInit();
@@ -184,145 +194,145 @@ void headArrayinit(void)
 //		For digital, the value will either be 0 or whatever the max ADC value is, depending on the active/inactive state.
 //
 //-------------------------------
-uint16_t headArrayOutputValue(HeadArrayOutputAxis_t axis_id)
-{
-	int16_t out_val = neutral_DAC_setting;
+//uint16_t headArrayOutputValue(HeadArrayOutputAxis_t axis_id)
+//{
+//	int16_t out_val = neutral_DAC_setting;
 
-	if (axis_id == HEAD_ARRAY_OUT_AXIS_LEFT_RIGHT)
-	{        
-		for (int sensor_id = 0; sensor_id < (int)HEAD_ARRAY_SENSOR_EOL; sensor_id++)
-		{
-			// If pad is not connected, don't bother taking it into account.
-			if (headArrayPadIsConnected((HeadArraySensor_t)sensor_id))
-			{
-				if ((input_pad_to_output_pad_map[sensor_id] == HEAD_ARRAY_OUT_FUNC_LEFT) ||
-					(input_pad_to_output_pad_map[sensor_id] == HEAD_ARRAY_OUT_FUNC_RIGHT))
-				{
-                    // Process RNet_SEATING feature here. If it's RNet_SEATING then
-                    // .. force a digital implementation ONLY.
-                    if (appCommonGetCurrentFeature() == FUNC_FEATURE_RNET_SEATING)
-                    {
-						// Only care about an input sensor affecting output if it is active.
-						if (headArrayDigitalInputValue((HeadArraySensor_t)sensor_id))
-						{
-							out_val += (int16_t)dac_output_manip_dir[(int)input_pad_to_output_pad_map[sensor_id]] * (int16_t)neutral_DAC_range;
-						}
-                    }
-					else if (head_arr_input_type[sensor_id] == HEAD_ARR_INPUT_DIGITAL)
-					{
-						// Only care about an input sensor affecting output if it is active.
-						if (headArrayDigitalInputValue((HeadArraySensor_t)sensor_id))
-						{
-							out_val += (int16_t)dac_output_manip_dir[(int)input_pad_to_output_pad_map[sensor_id]] * (int16_t)neutral_DAC_range;
-						}
-					}
-					else if (head_arr_input_type[sensor_id] == HEAD_ARR_INPUT_PROPORTIONAL)
-					{
-						// In order for proportional input to be considered, we first make sure that the corresponding digital sensor is active
-						// and also make sure that the minimum threshold required to have the prop signal active is met.
-						if (headArrayDigitalInputValue((HeadArraySensor_t)sensor_id))
-						{
-							out_val += (int16_t)dac_output_manip_dir[(int)input_pad_to_output_pad_map[sensor_id]] *
-									   (int16_t)ConvertPropInToOutValue(sensor_id);
-						}
-					}
-					else // Should never happen
-					{
-						// Input is of no care.
-						(void)0;
-					}
-				}
-				else
-				{
-					// It is either, none, forward, or backwards. Don't care.
-					(void)0;
-				}
-			}
-		}
-	}
-	else // HEAD_ARRAY_OUT_AXIS_FWD_REV
-	{
-		for (int sensor_id = 0; sensor_id < (int)HEAD_ARRAY_SENSOR_EOL; sensor_id++)
-		{
-			// If pad is not connected, don't bother taking it into account.
-			if (headArrayPadIsConnected((HeadArraySensor_t)sensor_id))
-			{
-				if ((input_pad_to_output_pad_map[sensor_id] == HEAD_ARRAY_OUT_FUNC_FWD) ||
-					(input_pad_to_output_pad_map[sensor_id] == HEAD_ARRAY_OUT_FUNC_REV))
-				{
-                    // Process RNet_SEATING feature here. If it's RNet_SEATING then
-                    // .. force the Forward/Reverse drive demand to be Neutral.
-                    if (appCommonGetCurrentFeature() == FUNC_FEATURE_RNET_SEATING)
-                    {
-						// out_val = neutral_DAC_setting;
-                    }
-					else if (head_arr_input_type[sensor_id] == HEAD_ARR_INPUT_DIGITAL)
-					{
-						// Only care about an input sensor affecting output if it is active.
-						if (headArrayDigitalInputValue((HeadArraySensor_t)sensor_id))
-						{
-							out_val += (int16_t)dac_output_manip_dir[(int)input_pad_to_output_pad_map[sensor_id]] * (int16_t)neutral_DAC_range;
-						}
-					}
-					else if (head_arr_input_type[sensor_id] == HEAD_ARR_INPUT_PROPORTIONAL)
-					{
-						// In order for proportional input to be considered, we first make sure that the corresponding digital sensor is active
-						// and also make sure that the minimum threshold required to have the prop signal active is met.
-						if (headArrayDigitalInputValue((HeadArraySensor_t)sensor_id))
-						{
-							out_val += (int16_t)dac_output_manip_dir[(int)input_pad_to_output_pad_map[sensor_id]] *
-									   (int16_t)ConvertPropInToOutValue(sensor_id);
-						}
-					}
-					else // Should never happen
-					{
-						// Input is of no care.
-						(void)0;
-					}
-				}
-				else
-				{
-					// It is either, none, left, or right. Don't care.
-					(void)0;
-				}
-			}
-		}
-        // Check to see if any FWD/REV pad is active. If not, see if the
-        // the Mode Reverse feature is active and if the mode switch is active.
-        // We will issue a neutral demand if both are active.
-        if (eeprom8bitGet(EEPROM_STORED_ITEM_ENABLED_FEATURES_2) & FUNC_FEATURE2_MODE_REVERSE_BIT_MASK)
-        {
-            if (out_val == neutral_DAC_setting) // Is a forward or reverse pad active?
-            {
-                if (IsModeSwitchActive())       // Is the Mode switch active
-                {
-					out_val += (int16_t)dac_output_manip_dir[HEAD_ARRAY_OUT_FUNC_REV] * (int16_t)neutral_DAC_range;
-                }
-            }
-            else // We have a forward or reverse demand
-            {
-                if (IsModeSwitchActive())       // Is the Mode switch active?
-                	out_val = neutral_DAC_setting; // Issue a neutral demand if multiple pads are active.
-            }
-        }
-	}
-
-	if (out_val < DAC_lower_rail)
-	{
-		out_val = DAC_lower_rail;
-	}
-	else if (out_val > DAC_upper_rail)
-	{
-		out_val = DAC_upper_rail;
-	}
-	else
-	{
-		// Nothing to do. The value is already in an acceptable range.
-		(void)0;
-	}
-	
-	return out_val;
-}
+//	if (axis_id == HEAD_ARRAY_OUT_AXIS_LEFT_RIGHT)
+//	{        
+//		for (int sensor_id = 0; sensor_id < (int)HEAD_ARRAY_SENSOR_EOL; sensor_id++)
+//		{
+//			// If pad is not connected, don't bother taking it into account.
+//			if (headArrayPadIsConnected((HeadArraySensor_t)sensor_id))
+//			{
+//				if ((input_pad_to_output_pad_map[sensor_id] == HEAD_ARRAY_OUT_FUNC_LEFT) ||
+//					(input_pad_to_output_pad_map[sensor_id] == HEAD_ARRAY_OUT_FUNC_RIGHT))
+//				{
+//                    // Process RNet_SEATING feature here. If it's RNet_SEATING then
+//                    // .. force a digital implementation ONLY.
+//                    if (appCommonGetCurrentFeature() == FUNC_FEATURE_RNET_SEATING)
+//                    {
+//						// Only care about an input sensor affecting output if it is active.
+//						if (headArrayDigitalInputValue((HeadArraySensor_t)sensor_id))
+//						{
+//							out_val += (int16_t)dac_output_manip_dir[(int)input_pad_to_output_pad_map[sensor_id]] * (int16_t)neutral_DAC_range;
+//						}
+//                    }
+//					else if (head_arr_input_type[sensor_id] == HEAD_ARR_INPUT_DIGITAL)
+//					{
+//						// Only care about an input sensor affecting output if it is active.
+//						if (headArrayDigitalInputValue((HeadArraySensor_t)sensor_id))
+//						{
+//							out_val += (int16_t)dac_output_manip_dir[(int)input_pad_to_output_pad_map[sensor_id]] * (int16_t)neutral_DAC_range;
+//						}
+//					}
+//					else if (head_arr_input_type[sensor_id] == HEAD_ARR_INPUT_PROPORTIONAL)
+//					{
+//						// In order for proportional input to be considered, we first make sure that the corresponding digital sensor is active
+//						// and also make sure that the minimum threshold required to have the prop signal active is met.
+//						if (headArrayDigitalInputValue((HeadArraySensor_t)sensor_id))
+//						{
+//							out_val += (int16_t)dac_output_manip_dir[(int)input_pad_to_output_pad_map[sensor_id]] *
+//									   (int16_t)ConvertPropInToOutValue(sensor_id);
+//						}
+//					}
+//					else // Should never happen
+//					{
+//						// Input is of no care.
+//						(void)0;
+//					}
+//				}
+//				else
+//				{
+//					// It is either, none, forward, or backwards. Don't care.
+//					(void)0;
+//				}
+//			}
+//		}
+//	}
+//	else // HEAD_ARRAY_OUT_AXIS_FWD_REV
+//	{
+//		for (int sensor_id = 0; sensor_id < (int)HEAD_ARRAY_SENSOR_EOL; sensor_id++)
+//		{
+//			// If pad is not connected, don't bother taking it into account.
+//			if (headArrayPadIsConnected((HeadArraySensor_t)sensor_id))
+//			{
+//				if ((input_pad_to_output_pad_map[sensor_id] == HEAD_ARRAY_OUT_FUNC_FWD) ||
+//					(input_pad_to_output_pad_map[sensor_id] == HEAD_ARRAY_OUT_FUNC_REV))
+//				{
+//                    // Process RNet_SEATING feature here. If it's RNet_SEATING then
+//                    // .. force the Forward/Reverse drive demand to be Neutral.
+//                    if (appCommonGetCurrentFeature() == FUNC_FEATURE_RNET_SEATING)
+//                    {
+//						// out_val = neutral_DAC_setting;
+//                    }
+//					else if (head_arr_input_type[sensor_id] == HEAD_ARR_INPUT_DIGITAL)
+//					{
+//						// Only care about an input sensor affecting output if it is active.
+//						if (headArrayDigitalInputValue((HeadArraySensor_t)sensor_id))
+//						{
+//							out_val += (int16_t)dac_output_manip_dir[(int)input_pad_to_output_pad_map[sensor_id]] * (int16_t)neutral_DAC_range;
+//						}
+//					}
+//					else if (head_arr_input_type[sensor_id] == HEAD_ARR_INPUT_PROPORTIONAL)
+//					{
+//						// In order for proportional input to be considered, we first make sure that the corresponding digital sensor is active
+//						// and also make sure that the minimum threshold required to have the prop signal active is met.
+//						if (headArrayDigitalInputValue((HeadArraySensor_t)sensor_id))
+//						{
+//							out_val += (int16_t)dac_output_manip_dir[(int)input_pad_to_output_pad_map[sensor_id]] *
+//									   (int16_t)ConvertPropInToOutValue(sensor_id);
+//						}
+//					}
+//					else // Should never happen
+//					{
+//						// Input is of no care.
+//						(void)0;
+//					}
+//				}
+//				else
+//				{
+//					// It is either, none, left, or right. Don't care.
+//					(void)0;
+//				}
+//			}
+//		}
+//        // Check to see if any FWD/REV pad is active. If not, see if the
+//        // the Mode Reverse feature is active and if the mode switch is active.
+//        // We will issue a neutral demand if both are active.
+//        if (eeprom8bitGet(EEPROM_STORED_ITEM_ENABLED_FEATURES_2) & FUNC_FEATURE2_MODE_REVERSE_BIT_MASK)
+//        {
+//            if (out_val == neutral_DAC_setting) // Is a forward or reverse pad active?
+//            {
+//                if (IsModeSwitchActive())       // Is the Mode switch active
+//                {
+//					out_val += (int16_t)dac_output_manip_dir[HEAD_ARRAY_OUT_FUNC_REV] * (int16_t)neutral_DAC_range;
+//                }
+//            }
+//            else // We have a forward or reverse demand
+//            {
+//                if (IsModeSwitchActive())       // Is the Mode switch active?
+//                	out_val = neutral_DAC_setting; // Issue a neutral demand if multiple pads are active.
+//            }
+//        }
+//	}
+//
+//	if (out_val < DAC_lower_rail)
+//	{
+//		out_val = DAC_lower_rail;
+//	}
+//	else if (out_val > DAC_upper_rail)
+//	{
+//		out_val = DAC_upper_rail;
+//	}
+//	else
+//	{
+//		// Nothing to do. The value is already in an acceptable range.
+//		(void)0;
+//	}
+//	
+//	return out_val;
+//}
 
 //-------------------------------
 // Function: headArrayDigitalInputValue
@@ -335,7 +345,7 @@ uint16_t headArrayOutputValue(HeadArrayOutputAxis_t axis_id)
 //-------------------------------
 bool headArrayDigitalInputValue(HeadArraySensor_t sensor)
 {
-	return pad_dig_state[(int)sensor];
+	return g_PadInfo[sensor].m_CurrentPadStatus;
 }
 
 //-------------------------------
@@ -347,10 +357,10 @@ bool headArrayDigitalInputValue(HeadArraySensor_t sensor)
 // NOTE: input->output mapping.
 //
 //-------------------------------
-uint16_t headArrayProportionalInputValueRaw(HeadArraySensor_t sensor)
-{
-	return pad_raw_prop_state[(int)sensor];
-}
+//uint16_t headArrayProportionalInputValueRaw(HeadArraySensor_t sensor)
+//{
+//	return pad_raw_prop_state[(int)sensor];
+//}
 
 //-------------------------------
 // Function: headArrayProportionalInputValue
@@ -361,10 +371,10 @@ uint16_t headArrayProportionalInputValueRaw(HeadArraySensor_t sensor)
 // NOTE: input->output mapping.
 //
 //-------------------------------
-uint16_t headArrayProportionalInputValue(HeadArraySensor_t sensor)
-{
-	return pad_prop_state[(int)sensor];
-}
+//uint16_t headArrayProportionalInputValue(HeadArraySensor_t sensor)
+//{
+//	return pad_prop_state[(int)sensor];
+//}
 
 //-------------------------------
 // Function: headArrayPadIsConnected
@@ -437,8 +447,8 @@ static void HeadArrayInputControlTask(void)
 				stopwatchStart(&neutral_sw);
 				
 				// Shut down all outputs.
-				dacBspSet(DAC_SELECT_FORWARD_BACKWARD, neutral_DAC_setting);
-				dacBspSet(DAC_SELECT_LEFT_RIGHT, neutral_DAC_setting);
+				//dacBspSet(DAC_SELECT_FORWARD_BACKWARD, neutral_DAC_setting);
+				//dacBspSet(DAC_SELECT_LEFT_RIGHT, neutral_DAC_setting);
 				bluetoothSimpleIfBspPadMirrorDisable();
 			}
 
@@ -470,8 +480,8 @@ static void HeadArrayInputControlTask(void)
 				outputs_are_off = true;
 
 				// Shut down all outputs.
-				dacBspSet(DAC_SELECT_FORWARD_BACKWARD, neutral_DAC_setting);
-				dacBspSet(DAC_SELECT_LEFT_RIGHT, neutral_DAC_setting);
+				//dacBspSet(DAC_SELECT_FORWARD_BACKWARD, neutral_DAC_setting);
+				//dacBspSet(DAC_SELECT_LEFT_RIGHT, neutral_DAC_setting);
 				bluetoothSimpleIfBspPadMirrorDisable();
 			}
 			else if (outputs_are_off)
@@ -499,8 +509,9 @@ static void CheckInputs(void)
 	TestBasicDacControl();  
 #endif
 
-	MirrorUpdateProportionalInputValues();
-	MirrorUpdateDigitalInputValues();
+	//MirrorUpdateProportionalInputValues();
+	//MirrorUpdateDigitalInputValues();
+    UpdatePadStatus();
 }
 
 //-------------------------------
@@ -526,8 +537,8 @@ static bool SetOutputs(void)
 				case FUNC_FEATURE_OUT_NEXT_PROFILE:
                 case FUNC_FEATURE_RNET_SEATING:
 					// Direct control of the wheelchair from this device
-					dacBspSet(DAC_SELECT_FORWARD_BACKWARD, headArrayOutputValue(HEAD_ARRAY_OUT_AXIS_FWD_REV));
-					dacBspSet(DAC_SELECT_LEFT_RIGHT, headArrayOutputValue(HEAD_ARRAY_OUT_AXIS_LEFT_RIGHT));
+					//dacBspSet(DAC_SELECT_FORWARD_BACKWARD, headArrayOutputValue(HEAD_ARRAY_OUT_AXIS_FWD_REV));
+					//dacBspSet(DAC_SELECT_LEFT_RIGHT, headArrayOutputValue(HEAD_ARRAY_OUT_AXIS_LEFT_RIGHT));
 					turn_outputs_off = false;
 					break;
 				
@@ -553,8 +564,8 @@ static bool SetOutputs(void)
 		// "Power is off". Better be in FUNC_FEATURE_POWER_ON_OFF state...
 		// TODO: Put check here to ensure we're in FUNC_FEATURE_POWER_ON_OFF state
         // The following are required because the DAC output is sticky otherwise.
-		dacBspSet(DAC_SELECT_FORWARD_BACKWARD, neutral_DAC_setting);
-        dacBspSet(DAC_SELECT_LEFT_RIGHT, neutral_DAC_setting);
+		//dacBspSet(DAC_SELECT_FORWARD_BACKWARD, neutral_DAC_setting);
+        //dacBspSet(DAC_SELECT_LEFT_RIGHT, neutral_DAC_setting);
 	}
 
 	return turn_outputs_off;
@@ -599,14 +610,28 @@ static bool SendStateRequestToLedControlModule(void)
 //		the value of each input is.
 //
 //-------------------------------
-static void MirrorUpdateDigitalInputValues(void)
+//static void MirrorUpdateDigitalInputValues(void)
+//{
+//	for (int sensor_id = 0; sensor_id < (int)HEAD_ARRAY_SENSOR_EOL; sensor_id++)
+//	{
+//		pad_dig_state[sensor_id] = headArrayBspDigitalState((HeadArraySensor_t)sensor_id);
+//	}
+//}
+
+//-----------------------------------------------------------------------
+// This gets the Pad's Digital status and stores them in the global structure.
+//-----------------------------------------------------------------------
+//DEBUG int g_MyCount = 0;
+
+static void UpdatePadStatus (void)
 {
 	for (int sensor_id = 0; sensor_id < (int)HEAD_ARRAY_SENSOR_EOL; sensor_id++)
 	{
-		pad_dig_state[sensor_id] = headArrayBspDigitalState((HeadArraySensor_t)sensor_id);
+		g_PadInfo[sensor_id].m_CurrentPadStatus = headArrayBspDigitalState((HeadArraySensor_t)sensor_id);
+//DEBUG        if (g_PadInfo[sensor_id].m_CurrentPadStatus)
+//DEBUG            ++g_MyCount;
 	}
 }
-
 //-------------------------------
 // Function: MirrorUpdateProportionalInputValues
 //
@@ -617,31 +642,31 @@ static void MirrorUpdateDigitalInputValues(void)
 //		 It would be good to have a better distinction, but, well, there ya go.
 //
 //-------------------------------
-static void MirrorUpdateProportionalInputValues(void)
-{
-	for (int sensor_id = 0; sensor_id < (int)HEAD_ARRAY_SENSOR_EOL; sensor_id++)
-	{
-		pad_raw_prop_state[sensor_id] = headArrayBspAnalogState((HeadArraySensor_t)sensor_id);
-
-		// For safety, make sure that min/max thresholds make sense before using them to control the output value.
-		if ((pad_raw_prop_state[sensor_id] < pad_adc_min_thresh_val[sensor_id]) ||
-			(pad_adc_max_thresh_val[sensor_id] <= pad_adc_min_thresh_val[sensor_id]))
-		{
-			pad_prop_state[sensor_id] = 0;
-		}
-		else if (pad_raw_prop_state[sensor_id] > pad_adc_max_thresh_val[sensor_id])
-		{
-			pad_prop_state[sensor_id] = 100;
-		}
-		else
-		{
-			uint16_t range = pad_adc_max_thresh_val[sensor_id] - pad_adc_min_thresh_val[sensor_id];
-
-			// In between min and max limits
-			pad_prop_state[sensor_id] = (uint16_t)(((uint32_t)100 * (uint32_t)(pad_raw_prop_state[sensor_id] - pad_adc_min_thresh_val[sensor_id])) / (uint32_t)range);
-        }
-	}
-}
+//static void MirrorUpdateProportionalInputValues(void)
+//{
+//	for (int sensor_id = 0; sensor_id < (int)HEAD_ARRAY_SENSOR_EOL; sensor_id++)
+//	{
+//		//pad_raw_prop_state[sensor_id] = headArrayBspAnalogState((HeadArraySensor_t)sensor_id);
+//
+//		// For safety, make sure that min/max thresholds make sense before using them to control the output value.
+//		if ((pad_raw_prop_state[sensor_id] < pad_adc_min_thresh_val[sensor_id]) ||
+//			(pad_adc_max_thresh_val[sensor_id] <= pad_adc_min_thresh_val[sensor_id]))
+//		{
+//			pad_prop_state[sensor_id] = 0;
+//		}
+//		else if (pad_raw_prop_state[sensor_id] > pad_adc_max_thresh_val[sensor_id])
+//		{
+//			pad_prop_state[sensor_id] = 100;
+//		}
+//		else
+//		{
+//			uint16_t range = pad_adc_max_thresh_val[sensor_id] - pad_adc_min_thresh_val[sensor_id];
+//
+//			// In between min and max limits
+//			pad_prop_state[sensor_id] = (uint16_t)(((uint32_t)100 * (uint32_t)(pad_raw_prop_state[sensor_id] - pad_adc_min_thresh_val[sensor_id])) / (uint32_t)range);
+//        }
+//	}
+//}
 
 //-------------------------------
 // Function: MirrorDigitalInputOnBluetoothOutput
@@ -651,9 +676,10 @@ static void MirrorUpdateProportionalInputValues(void)
 //-------------------------------
 static void MirrorDigitalInputOnBluetoothOutput(void)
 {
-	for (int i = 0; i < sizeof(pad_dig_state); i++)
+	for (int i = 0; i < (int) HEAD_ARRAY_SENSOR_EOL; i++)
 	{
-		bluetoothSimpleIfBspPadMirrorStateSet((HeadArraySensor_t)i, pad_dig_state[i]);
+		//bluetoothSimpleIfBspPadMirrorStateSet((HeadArraySensor_t)i, pad_dig_state[i]);
+		bluetoothSimpleIfBspPadMirrorStateSet((HeadArraySensor_t)i, g_PadInfo[i].m_CurrentPadStatus);
 	}
 }
 
@@ -663,19 +689,19 @@ static void MirrorDigitalInputOnBluetoothOutput(void)
 // Description: Converts input proportional value to DAC output value.
 //
 //-------------------------------
-static uint16_t ConvertPropInToOutValue(uint8_t sensor_id)
-{
-	uint16_t ret_val;
-	ret_val = DAC_Minimum_percent[sensor_id];
-
-	// The on-scale is 20%-100%. Where, the first 20% is always there if the digital input is active (and it
-	// MUST be active in order for the proportional value to be considered) and the other 80% of control
-	// comes for the proportional value.
-    // As of Feb 1, 2020, the percentage is programmable is considered in RefreshLimits()
-	ret_val += (pad_prop_state[sensor_id] * DAC_Proportional_percent[sensor_id]) / (uint16_t)100;
-
-	return ret_val;
-}
+//static uint16_t ConvertPropInToOutValue(uint8_t sensor_id)
+//{
+//	uint16_t ret_val;
+//	ret_val = DAC_Minimum_percent[sensor_id];
+//
+//	// The on-scale is 20%-100%. Where, the first 20% is always there if the digital input is active (and it
+//	// MUST be active in order for the proportional value to be considered) and the other 80% of control
+//	// comes for the proportional value.
+//    // As of Feb 1, 2020, the percentage is programmable is considered in RefreshLimits()
+//	ret_val += (pad_prop_state[sensor_id] * DAC_Proportional_percent[sensor_id]) / (uint16_t)100;
+//
+//	return ret_val;
+//}
 
 //-------------------------------
 // Function: InNeutralState
@@ -687,15 +713,15 @@ static uint16_t ConvertPropInToOutValue(uint8_t sensor_id)
 //-------------------------------
 static bool InNeutralState(void)
 {
-	if ((headArrayOutputValue(HEAD_ARRAY_OUT_AXIS_LEFT_RIGHT) == neutral_DAC_setting) &&
-		(headArrayOutputValue(HEAD_ARRAY_OUT_AXIS_FWD_REV) == neutral_DAC_setting))
-	{
+//	if ((headArrayOutputValue(HEAD_ARRAY_OUT_AXIS_LEFT_RIGHT) == neutral_DAC_setting) &&
+//		(headArrayOutputValue(HEAD_ARRAY_OUT_AXIS_FWD_REV) == neutral_DAC_setting))
+//	{
 		return true;
-	}
-	else
-	{
-		return false;
-	}
+//	}
+//	else
+//	{
+//		return false;
+//	}
 }
 
 //-------------------------------
@@ -722,8 +748,8 @@ static bool SyncWithEeprom(void)
 		if (curr_active_feature == FUNC_FEATURE_OUT_CTRL_TO_BT_MODULE)
 		{
 			// Shutdown output to control the system directly from this device
-			dacBspSet(DAC_SELECT_FORWARD_BACKWARD, neutral_DAC_setting);
-			dacBspSet(DAC_SELECT_LEFT_RIGHT, neutral_DAC_setting);
+			//dacBspSet(DAC_SELECT_FORWARD_BACKWARD, neutral_DAC_setting);
+			//dacBspSet(DAC_SELECT_LEFT_RIGHT, neutral_DAC_setting);
 		}
 		else
 		{
@@ -737,51 +763,51 @@ static bool SyncWithEeprom(void)
         wait_for_neutral = true;
 	}
 
-	head_arr_input_type[(int)HEAD_ARRAY_SENSOR_LEFT] = (HeadArrayInputType_t)eepromEnumGet(EEPROM_STORED_ITEM_LEFT_PAD_INPUT_TYPE);
-	head_arr_input_type[(int)HEAD_ARRAY_SENSOR_RIGHT] = (HeadArrayInputType_t)eepromEnumGet(EEPROM_STORED_ITEM_RIGHT_PAD_INPUT_TYPE);
-	head_arr_input_type[(int)HEAD_ARRAY_SENSOR_CENTER] = (HeadArrayInputType_t)eepromEnumGet(EEPROM_STORED_ITEM_CTR_PAD_INPUT_TYPE);
+//	head_arr_input_type[(int)HEAD_ARRAY_SENSOR_LEFT] = (HeadArrayInputType_t)eepromEnumGet(EEPROM_STORED_ITEM_LEFT_PAD_INPUT_TYPE);
+//	head_arr_input_type[(int)HEAD_ARRAY_SENSOR_RIGHT] = (HeadArrayInputType_t)eepromEnumGet(EEPROM_STORED_ITEM_RIGHT_PAD_INPUT_TYPE);
+//	head_arr_input_type[(int)HEAD_ARRAY_SENSOR_CENTER] = (HeadArrayInputType_t)eepromEnumGet(EEPROM_STORED_ITEM_CTR_PAD_INPUT_TYPE);
 
-	input_pad_to_output_pad_map[(int)HEAD_ARRAY_SENSOR_LEFT] = (HeadArrayOutputFunction_t)eepromEnumGet(EEPROM_STORED_ITEM_LEFT_PAD_OUTPUT_MAP);
-	input_pad_to_output_pad_map[(int)HEAD_ARRAY_SENSOR_RIGHT] = (HeadArrayOutputFunction_t)eepromEnumGet(EEPROM_STORED_ITEM_RIGHT_PAD_OUTPUT_MAP);
-	input_pad_to_output_pad_map[(int)HEAD_ARRAY_SENSOR_CENTER] = (HeadArrayOutputFunction_t)eepromEnumGet(EEPROM_STORED_ITEM_CTR_PAD_OUTPUT_MAP);
+//	input_pad_to_output_pad_map[(int)HEAD_ARRAY_SENSOR_LEFT] = (HeadArrayOutputFunction_t)eepromEnumGet(EEPROM_STORED_ITEM_LEFT_PAD_OUTPUT_MAP);
+//	input_pad_to_output_pad_map[(int)HEAD_ARRAY_SENSOR_RIGHT] = (HeadArrayOutputFunction_t)eepromEnumGet(EEPROM_STORED_ITEM_RIGHT_PAD_OUTPUT_MAP);
+//	input_pad_to_output_pad_map[(int)HEAD_ARRAY_SENSOR_CENTER] = (HeadArrayOutputFunction_t)eepromEnumGet(EEPROM_STORED_ITEM_CTR_PAD_OUTPUT_MAP);
 	
-	pad_min_adc_val[(int)HEAD_ARRAY_SENSOR_LEFT] = eeprom16bitGet(EEPROM_STORED_ITEM_LEFT_PAD_MIN_ADC_VAL);
-	pad_min_adc_val[(int)HEAD_ARRAY_SENSOR_RIGHT] = eeprom16bitGet(EEPROM_STORED_ITEM_RIGHT_PAD_MIN_ADC_VAL);
-	pad_min_adc_val[(int)HEAD_ARRAY_SENSOR_CENTER] = eeprom16bitGet(EEPROM_STORED_ITEM_CTR_PAD_MIN_ADC_VAL);
+//	pad_min_adc_val[(int)HEAD_ARRAY_SENSOR_LEFT] = eeprom16bitGet(EEPROM_STORED_ITEM_LEFT_PAD_MIN_ADC_VAL);
+//	pad_min_adc_val[(int)HEAD_ARRAY_SENSOR_RIGHT] = eeprom16bitGet(EEPROM_STORED_ITEM_RIGHT_PAD_MIN_ADC_VAL);
+//	pad_min_adc_val[(int)HEAD_ARRAY_SENSOR_CENTER] = eeprom16bitGet(EEPROM_STORED_ITEM_CTR_PAD_MIN_ADC_VAL);
 	
-	pad_max_adc_val[(int)HEAD_ARRAY_SENSOR_LEFT] = eeprom16bitGet(EEPROM_STORED_ITEM_LEFT_PAD_MAX_ADC_VAL);
-	pad_max_adc_val[(int)HEAD_ARRAY_SENSOR_RIGHT] = eeprom16bitGet(EEPROM_STORED_ITEM_RIGHT_PAD_MAX_ADC_VAL);
-	pad_max_adc_val[(int)HEAD_ARRAY_SENSOR_CENTER] = eeprom16bitGet(EEPROM_STORED_ITEM_CTR_PAD_MAX_ADC_VAL);
+//	pad_max_adc_val[(int)HEAD_ARRAY_SENSOR_LEFT] = eeprom16bitGet(EEPROM_STORED_ITEM_LEFT_PAD_MAX_ADC_VAL);
+//	pad_max_adc_val[(int)HEAD_ARRAY_SENSOR_RIGHT] = eeprom16bitGet(EEPROM_STORED_ITEM_RIGHT_PAD_MAX_ADC_VAL);
+//	pad_max_adc_val[(int)HEAD_ARRAY_SENSOR_CENTER] = eeprom16bitGet(EEPROM_STORED_ITEM_CTR_PAD_MAX_ADC_VAL);
 	
-	pad_min_thresh_perc[(int)HEAD_ARRAY_SENSOR_LEFT] = eeprom16bitGet(EEPROM_STORED_ITEM_LEFT_PAD_MIN_THRESH_PERC);
-	pad_min_thresh_perc[(int)HEAD_ARRAY_SENSOR_RIGHT] = eeprom16bitGet(EEPROM_STORED_ITEM_RIGHT_PAD_MIN_THRESH_PERC);
-	pad_min_thresh_perc[(int)HEAD_ARRAY_SENSOR_CENTER] = eeprom16bitGet(EEPROM_STORED_ITEM_CTR_PAD_MIN_THRESH_PERC);
+//	pad_min_thresh_perc[(int)HEAD_ARRAY_SENSOR_LEFT] = eeprom16bitGet(EEPROM_STORED_ITEM_LEFT_PAD_MIN_THRESH_PERC);
+//	pad_min_thresh_perc[(int)HEAD_ARRAY_SENSOR_RIGHT] = eeprom16bitGet(EEPROM_STORED_ITEM_RIGHT_PAD_MIN_THRESH_PERC);
+//	pad_min_thresh_perc[(int)HEAD_ARRAY_SENSOR_CENTER] = eeprom16bitGet(EEPROM_STORED_ITEM_CTR_PAD_MIN_THRESH_PERC);
 	
-	pad_max_thresh_perc[(int)HEAD_ARRAY_SENSOR_LEFT] = eeprom16bitGet(EEPROM_STORED_ITEM_LEFT_PAD_MAX_THRESH_PERC);
-	pad_max_thresh_perc[(int)HEAD_ARRAY_SENSOR_RIGHT] = eeprom16bitGet(EEPROM_STORED_ITEM_RIGHT_PAD_MAX_THRESH_PERC);
-	pad_max_thresh_perc[(int)HEAD_ARRAY_SENSOR_CENTER] = eeprom16bitGet(EEPROM_STORED_ITEM_CTR_PAD_MAX_THRESH_PERC);
+//	pad_max_thresh_perc[(int)HEAD_ARRAY_SENSOR_LEFT] = eeprom16bitGet(EEPROM_STORED_ITEM_LEFT_PAD_MAX_THRESH_PERC);
+//	pad_max_thresh_perc[(int)HEAD_ARRAY_SENSOR_RIGHT] = eeprom16bitGet(EEPROM_STORED_ITEM_RIGHT_PAD_MAX_THRESH_PERC);
+//	pad_max_thresh_perc[(int)HEAD_ARRAY_SENSOR_CENTER] = eeprom16bitGet(EEPROM_STORED_ITEM_CTR_PAD_MAX_THRESH_PERC);
 
-    pad_MinDriveSpeed[(int)HEAD_ARRAY_SENSOR_CENTER] = (uint16_t) eeprom8bitGet(EEPROM_STORED_ITEM_MM_CENTER_PAD_MINIMUM_DRIVE_OFFSET);
-    pad_MinDriveSpeed[(int)HEAD_ARRAY_SENSOR_LEFT] = (uint16_t) eeprom8bitGet(EEPROM_STORED_ITEM_MM_LEFT_PAD_MINIMUM_DRIVE_OFFSET);
-    pad_MinDriveSpeed[(int)HEAD_ARRAY_SENSOR_RIGHT] = (uint16_t) eeprom8bitGet(EEPROM_STORED_ITEM_MM_RIGHT_PAD_MINIMUM_DRIVE_OFFSET);
+//    pad_MinDriveSpeed[(int)HEAD_ARRAY_SENSOR_CENTER] = (uint16_t) eeprom8bitGet(EEPROM_STORED_ITEM_MM_CENTER_PAD_MINIMUM_DRIVE_OFFSET);
+//    pad_MinDriveSpeed[(int)HEAD_ARRAY_SENSOR_LEFT] = (uint16_t) eeprom8bitGet(EEPROM_STORED_ITEM_MM_LEFT_PAD_MINIMUM_DRIVE_OFFSET);
+//    pad_MinDriveSpeed[(int)HEAD_ARRAY_SENSOR_RIGHT] = (uint16_t) eeprom8bitGet(EEPROM_STORED_ITEM_MM_RIGHT_PAD_MINIMUM_DRIVE_OFFSET);
     
-    neutral_DAC_counts = eeprom16bitGet(EEPROM_STORED_ITEM_MM_NEUTRAL_DAC_COUNTS);
-    neutral_DAC_setting = eeprom16bitGet(EEPROM_STORED_ITEM_MM_NEUTRAL_DAC_SETTING);
-    neutral_DAC_range = eeprom16bitGet(EEPROM_STORED_ITEM_MM_NEUTRAL_DAC_RANGE);
+//    neutral_DAC_counts = eeprom16bitGet(EEPROM_STORED_ITEM_MM_NEUTRAL_DAC_COUNTS);
+//    neutral_DAC_setting = eeprom16bitGet(EEPROM_STORED_ITEM_MM_NEUTRAL_DAC_SETTING);
+//    neutral_DAC_range = eeprom16bitGet(EEPROM_STORED_ITEM_MM_NEUTRAL_DAC_RANGE);
 
-	for (int sensor_id = 0; sensor_id < HEAD_ARRAY_SENSOR_EOL; sensor_id++)
-	{
-		range = pad_max_adc_val[sensor_id] - pad_min_adc_val[sensor_id];
-		pad_adc_min_thresh_val[sensor_id] = pad_min_adc_val[sensor_id] + (uint16_t)(((uint32_t)range * (uint32_t)pad_min_thresh_perc[sensor_id]) / (uint32_t)100);
-		pad_adc_max_thresh_val[sensor_id] = pad_min_adc_val[sensor_id] + (uint16_t)(((uint32_t)range * (uint32_t)pad_max_thresh_perc[sensor_id]) / (uint32_t)100);
-        DAC_Proportional_percent[sensor_id] = (neutral_DAC_range * (100 - pad_MinDriveSpeed[sensor_id])) / 100;
-        DAC_Minimum_percent[sensor_id] = (neutral_DAC_range * pad_MinDriveSpeed[sensor_id]) / 100;
-
-	}
+//	for (int sensor_id = 0; sensor_id < HEAD_ARRAY_SENSOR_EOL; sensor_id++)
+//	{
+//		range = pad_max_adc_val[sensor_id] - pad_min_adc_val[sensor_id];
+//		pad_adc_min_thresh_val[sensor_id] = pad_min_adc_val[sensor_id] + (uint16_t)(((uint32_t)range * (uint32_t)pad_min_thresh_perc[sensor_id]) / (uint32_t)100);
+//		pad_adc_max_thresh_val[sensor_id] = pad_min_adc_val[sensor_id] + (uint16_t)(((uint32_t)range * (uint32_t)pad_max_thresh_perc[sensor_id]) / (uint32_t)100);
+//        DAC_Proportional_percent[sensor_id] = (neutral_DAC_range * (100 - pad_MinDriveSpeed[sensor_id])) / 100;
+//        DAC_Minimum_percent[sensor_id] = (neutral_DAC_range * pad_MinDriveSpeed[sensor_id]) / 100;
+//
+//	}
 	
 	// Need to make sure that the limits are set using the latest variables pulled from the EEPROM
 	// module from above.
-	RefreshLimits();
+//	RefreshLimits();
 
     return need_to_send_event;
 }
@@ -792,17 +818,17 @@ static bool SyncWithEeprom(void)
 // Description: Set the DAC variables and constants
 //
 //-------------------------------
-static void RefreshLimits(void)
-{
-    
-	DAC_lower_rail = neutral_DAC_setting - neutral_DAC_range;
-	DAC_upper_rail = neutral_DAC_setting + neutral_DAC_range;
-
-	DAC_max_forward_counts = DAC_upper_rail;
-	DAC_max_left_counts = DAC_lower_rail;
-	DAC_max_right_counts = DAC_upper_rail;
-	DAC_max_reverse_counts = DAC_lower_rail;
-}
+//static void RefreshLimits(void)
+//{
+//    
+//	DAC_lower_rail = neutral_DAC_setting - neutral_DAC_range;
+//	DAC_upper_rail = neutral_DAC_setting + neutral_DAC_range;
+//
+//	DAC_max_forward_counts = DAC_upper_rail;
+//	DAC_max_left_counts = DAC_lower_rail;
+//	DAC_max_right_counts = DAC_upper_rail;
+//	DAC_max_reverse_counts = DAC_lower_rail;
+//}
 
 #if defined(TEST_BASIC_DAC_CONTROL)
 //-------------------------------

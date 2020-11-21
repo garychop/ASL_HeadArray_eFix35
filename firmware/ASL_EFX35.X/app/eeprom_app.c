@@ -638,48 +638,49 @@ void SetDefaultValues(void)
 {
 	eeprom_data.items.eeprom_intiailized = EEPROM_INITIALIZED_VAL;
 	
-	eeprom_data.items.left_pad_input_type = (EepromStoredEnumType_t)HEAD_ARR_INPUT_PROPORTIONAL;
-	eeprom_data.items.right_pad_input_type = (EepromStoredEnumType_t)HEAD_ARR_INPUT_PROPORTIONAL;
-	eeprom_data.items.center_pad_input_type = (EepromStoredEnumType_t)HEAD_ARR_INPUT_PROPORTIONAL;
+//	eeprom_data.items.left_pad_input_type = (EepromStoredEnumType_t)HEAD_ARR_INPUT_PROPORTIONAL;
+//	eeprom_data.items.right_pad_input_type = (EepromStoredEnumType_t)HEAD_ARR_INPUT_PROPORTIONAL;
+//	eeprom_data.items.center_pad_input_type = (EepromStoredEnumType_t)HEAD_ARR_INPUT_PROPORTIONAL;
 
-	eeprom_data.items.left_pad_output_map = (EepromStoredEnumType_t)HEAD_ARRAY_OUT_FUNC_LEFT;
-	eeprom_data.items.right_pad_output_map = (EepromStoredEnumType_t)HEAD_ARRAY_OUT_FUNC_RIGHT;
-	eeprom_data.items.center_pad_output_map = (EepromStoredEnumType_t)HEAD_ARRAY_OUT_FUNC_FWD;
+//	eeprom_data.items.left_pad_output_map = (EepromStoredEnumType_t)HEAD_ARRAY_OUT_FUNC_LEFT;
+//	eeprom_data.items.right_pad_output_map = (EepromStoredEnumType_t)HEAD_ARRAY_OUT_FUNC_RIGHT;
+//	eeprom_data.items.center_pad_output_map = (EepromStoredEnumType_t)HEAD_ARRAY_OUT_FUNC_FWD;
 
 	eeprom_data.items.user_btn_long_press_act_time = 1000;
 	
 	// Enable all features.
-	eeprom_data.items.enabled_features = FUNC_FEATURE_POWER_ON_OFF_BIT_MASK | 
-                                        FUNC_FEATURE_OUT_CTRL_TO_BT_MODULE_BIT_MASK |
-                                        FUNC_FEATURE_NEXT_FUNCTION_BIT_MASK | 
-                                        FUNC_FEATURE_NEXT_PROFILE_BIT_MASK |
-                                        FUNC_FEATURE_SOUND_ENABLED_BIT_MASK;
+	eeprom_data.items.enabled_features = //FUNC_FEATURE_POWER_ON_OFF_BIT_MASK | 
+                                        //FUNC_FEATURE_OUT_CTRL_TO_BT_MODULE_BIT_MASK | 
+                                        //FUNC_FEATURE_NEXT_FUNCTION_BIT_MASK | 
+                                        //FUNC_FEATURE_NEXT_PROFILE_BIT_MASK |
+                                        //FUNC_FEATURE_SOUND_ENABLED_BIT_MASK;
+            0;
             
 	eeprom_data.items.current_active_feature = (EepromStoredEnumType_t)FUNC_FEATURE_POWER_ON_OFF;
 
-	eeprom_data.items.left_pad_min_adc_val = ADC_LEFT_PAD_MIN_VAL;
-	eeprom_data.items.left_pad_max_adc_val = ADC_LEFT_PAD_MAX_VAL;
-	eeprom_data.items.left_pad_min_thresh_perc = 2;
-	eeprom_data.items.left_pad_max_thresh_perc = 30;
+//	eeprom_data.items.left_pad_min_adc_val = ADC_LEFT_PAD_MIN_VAL;
+//	eeprom_data.items.left_pad_max_adc_val = ADC_LEFT_PAD_MAX_VAL;
+//	eeprom_data.items.left_pad_min_thresh_perc = 2;
+//	eeprom_data.items.left_pad_max_thresh_perc = 30;
 
-	eeprom_data.items.right_pad_min_adc_val = ADC_RIGHT_PAD_MIN_VAL;
-	eeprom_data.items.right_pad_max_adc_val = ADC_RIGHT_PAD_MAX_VAL;
-	eeprom_data.items.right_pad_min_thresh_perc = 2;
-	eeprom_data.items.right_pad_max_thresh_perc = 30;
+//	eeprom_data.items.right_pad_min_adc_val = ADC_RIGHT_PAD_MIN_VAL;
+//	eeprom_data.items.right_pad_max_adc_val = ADC_RIGHT_PAD_MAX_VAL;
+//	eeprom_data.items.right_pad_min_thresh_perc = 2;
+//	eeprom_data.items.right_pad_max_thresh_perc = 30;
 
-	eeprom_data.items.ctr_pad_min_adc_val = ADC_CTR_PAD_MIN_VAL;
-	eeprom_data.items.ctr_pad_max_adc_val = ADC_CTR_PAD_MAX_VAL;
-	eeprom_data.items.ctr_pad_min_thresh_perc = 2;
-	eeprom_data.items.ctr_pad_max_thresh_perc = 30;
+//	eeprom_data.items.ctr_pad_min_adc_val = ADC_CTR_PAD_MIN_VAL;
+//	eeprom_data.items.ctr_pad_max_adc_val = ADC_CTR_PAD_MAX_VAL;
+//	eeprom_data.items.ctr_pad_min_thresh_perc = 2;
+//	eeprom_data.items.ctr_pad_max_thresh_perc = 30;
 
-#ifdef USE_12VOLT_REGULATOR
-    eeprom_data.items.neutral_DAC_counts = 2048+212;        // Mid-point of 12-bit DAC
-    eeprom_data.items.neutral_DAC_setting = 2040+212;       // Mid-point of 12-bit DAC
-#else
-    eeprom_data.items.neutral_DAC_counts = 2048;        // Mid-point of 12-bit DAC
-    eeprom_data.items.neutral_DAC_setting = 2032;       // Mid-point of 12-bit DAC
-#endif
-    eeprom_data.items.neutral_DAC_range = 410;          // Allowable range for 1.2 V swing.
+//#ifdef USE_12VOLT_REGULATOR
+//    eeprom_data.items.neutral_DAC_counts = 2048+212;        // Mid-point of 12-bit DAC
+//    eeprom_data.items.neutral_DAC_setting = 2040+212;       // Mid-point of 12-bit DAC
+//#else
+//    eeprom_data.items.neutral_DAC_counts = 2048;        // Mid-point of 12-bit DAC
+//    eeprom_data.items.neutral_DAC_setting = 2032;       // Mid-point of 12-bit DAC
+//#endif
+//    eeprom_data.items.neutral_DAC_range = 410;          // Allowable range for 1.2 V swing.
     
     // Added in Version 3
     eeprom_data.items.EEPROM_Version = EEPROM_DATA_STRUCTURE_VERSION;
@@ -689,9 +690,9 @@ void SetDefaultValues(void)
     //eeprom_data.items.Drive_Offset = 20;                // Default drive offset is 20%
 
     // Changed and/or added in Version 5
-    eeprom_data.items.CenterPad_MinimumDriveSpeed = 20;     // Center Pad minimum speed
-    eeprom_data.items.LeftPad_MinimumDriveSpeed = 20;       // Left Pad minimum speed
-    eeprom_data.items.RightPad_MinimumDriveSpeed = 20;      // Right Pad minimum speed
+//    eeprom_data.items.CenterPad_MinimumDriveSpeed = 20;     // Center Pad minimum speed
+//    eeprom_data.items.LeftPad_MinimumDriveSpeed = 20;       // Left Pad minimum speed
+//    eeprom_data.items.RightPad_MinimumDriveSpeed = 20;      // Right Pad minimum speed
     
     // Added in Version 6
     eeprom_data.items.enabled_features2 = 0;                // Feature set 2 is all disabled.

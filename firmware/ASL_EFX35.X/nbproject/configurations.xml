@@ -20,7 +20,6 @@
         <itemPath>bsp/inc/beeper_bsp.h</itemPath>
         <itemPath>bsp/inc/bluetooth_simple_if_bsp.h</itemPath>
         <itemPath>bsp/inc/bsp.h</itemPath>
-        <itemPath>bsp/inc/dac_bsp.h</itemPath>
         <itemPath>bsp/inc/eeprom_bsp.h</itemPath>
         <itemPath>bsp/inc/head_array_bsp.h</itemPath>
         <itemPath>bsp/inc/test_gpio.h</itemPath>
@@ -89,7 +88,6 @@
         <itemPath>bsp/XC8/beeper_bsp.c</itemPath>
         <itemPath>bsp/XC8/bluetooth_simple_if_bsp.c</itemPath>
         <itemPath>bsp/XC8/bsp.c</itemPath>
-        <itemPath>bsp/XC8/dac_bsp.c</itemPath>
         <itemPath>bsp/XC8/eeprom_bsp.c</itemPath>
         <itemPath>bsp/XC8/head_array_bsp.c</itemPath>
         <itemPath>bsp/XC8/test_gpio.c</itemPath>

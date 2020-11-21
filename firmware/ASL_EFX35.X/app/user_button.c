@@ -208,11 +208,11 @@ static void UserButtonMonitorTask (void)
                     // Beep that the button was pushed.
                     if (currentButtonPattern & USER_SWITCH)
                     {
-//                        event_to_send_beeper_task = beeperBeep(BEEPER_PATTERN_USER_BUTTON_SHORT_PRESS);
-//                        if (event_to_send_beeper_task != NO_EVENT)
-//                        {
-//                            event_signal(event_to_send_beeper_task);
-//                        }
+                        event_to_send_beeper_task = beeperBeep(BEEPER_PATTERN_USER_BUTTON_SHORT_PRESS);
+                        if (event_to_send_beeper_task != NO_EVENT)
+                        {
+                            event_signal(event_to_send_beeper_task);
+                        }
                         g_ButtonState = PROCESS_ACTIVE_USER_SWTICH;
                     }
                     else if (currentButtonPattern & MODE_SWITCH)
