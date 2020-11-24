@@ -156,8 +156,6 @@ uint8_t GetSwitchStatus(void)
 //
 //-------------------------------
 
-static int g_MyButton = 0;
-
 static void UserButtonMonitorTask (void)
 {
     Evt_t event_to_send_beeper_task;
@@ -242,22 +240,6 @@ static void UserButtonMonitorTask (void)
             // then perform the Short Press operation.
             if (currentButtonPattern & USER_SWITCH) // I'm looking only at the User Switch.
             {
-                switch (g_MyButton)
-                {
-                    case 0:
-                        GenOutCtrlApp_SetStateAll(GEN_OUT_FORWARD_PAD_ACTIVE);
-  //                      event_signal(genOutCtrlAppWakeEvent());
-                        break;
-                    case 1:
-                        GenOutCtrlApp_SetStateAll(GEN_OUT_REVERSE_PAD_ACTIVE);
-                        break;
-                    case 2:
-                        GenOutCtrlApp_SetStateAll(GEN_OUT_LEFT_PAD_ACTIVE);
-                        break;
-                    case 3:
-                        GenOutCtrlApp_SetStateAll(GEN_OUT_RIGHT_PAD_ACTIVE);
-                        break;
-                }
                 g_ButtonState = WAIT_FOR_NO_SWITCHES;
 //                if (stopwatchTimeElapsed (&btn_mon_stopwatch, false) >= time_for_func_to_trigger_ms[USER_BTN_PRESS_LONG])
 //                {
@@ -317,24 +299,6 @@ static void UserButtonMonitorTask (void)
                 {
                     g_ButtonState = INIT_BUTTON_STATE; // essentially, start from scratch.
                     stopwatchStop(&btn_mon_stopwatch);      // Stop the timer
-                    switch (g_MyButton)
-                    {
-                        case 0:
-                            GenOutCtrlApp_SetStateAll(GEN_OUT_FORWARD_PAD_INACTIVE);
-//                            event_signal(genOutCtrlAppWakeEvent());
-                            break;
-                        case 1:
-                            GenOutCtrlApp_SetStateAll(GEN_OUT_REVERSE_PAD_INACTIVE);
-                            break;
-                        case 2:
-                            GenOutCtrlApp_SetStateAll(GEN_OUT_LEFT_PAD_INACTIVE);
-                            break;
-                        case 3:
-                            GenOutCtrlApp_SetStateAll(GEN_OUT_RIGHT_PAD_INACTIVE);
-                            break;
-                    }
-                    ++g_MyButton;
-                    g_MyButton %= 4;
                 }
             }
         }

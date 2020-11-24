@@ -649,12 +649,12 @@ void SetDefaultValues(void)
 	eeprom_data.items.user_btn_long_press_act_time = 1000;
 	
 	// Enable all features.
-	eeprom_data.items.enabled_features = //FUNC_FEATURE_POWER_ON_OFF_BIT_MASK | 
-                                        //FUNC_FEATURE_OUT_CTRL_TO_BT_MODULE_BIT_MASK | 
+	eeprom_data.items.enabled_features = //FUNC_FEATURE_POWER_ON_OFF_BIT_MASK; | 
+                                        //FUNC_FEATURE_OUT_CTRL_TO_BT_MODULE_BIT_MASK;
                                         //FUNC_FEATURE_NEXT_FUNCTION_BIT_MASK | 
                                         //FUNC_FEATURE_NEXT_PROFILE_BIT_MASK |
-                                        //FUNC_FEATURE_SOUND_ENABLED_BIT_MASK;
-            0;
+                                        FUNC_FEATURE_SOUND_ENABLED_BIT_MASK;
+            //0;
             
 	eeprom_data.items.current_active_feature = (EepromStoredEnumType_t)FUNC_FEATURE_POWER_ON_OFF;
 

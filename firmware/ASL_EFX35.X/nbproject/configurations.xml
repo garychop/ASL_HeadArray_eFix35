@@ -258,7 +258,7 @@
         <property key="Freeze Peripherals" value="true"/>
         <property key="SecureSegment.SegmentProgramming" value="FullChipProgramming"/>
         <property key="ToolFirmwareFilePath"
-                  value="Press to browse for a specific firmware version"/>
+                  value="C:\Program Files (x86)/Microchip/MPLABX/v5.30/mplab_platform/mplablibs/modules/ext/PICKIT3.jar/PK3FW_015602.jam"/>
         <property key="ToolFirmwareOption.UseLatestFirmware" value="true"/>
         <property key="debugoptions.useswbreakpoints" value="false"/>
         <property key="hwtoolclock.frcindebug" value="false"/>
@@ -283,7 +283,7 @@
         <property key="programoptions.preservedataflash" value="false"/>
         <property key="programoptions.preservedataflash.ranges"
                   value="${programoptions.preservedataflash.ranges}"/>
-        <property key="programoptions.preserveeeprom" value="false"/>
+        <property key="programoptions.preserveeeprom" value="true"/>
         <property key="programoptions.preserveeeprom.ranges" value="0-ff"/>
         <property key="programoptions.preserveprogram.ranges" value=""/>
         <property key="programoptions.preserveprogramrange" value="false"/>
@@ -293,7 +293,7 @@
         <property key="programoptions.testmodeentrymethod" value="VDDFirst"/>
         <property key="programoptions.usehighvoltageonmclr" value="false"/>
         <property key="programoptions.uselvpprogramming" value="false"/>
-        <property key="voltagevalue" value="3.375"/>
+        <property key="voltagevalue" value="5.0"/>
       </PICkit3PlatformTool>
       <XC8-CO>
         <property key="coverage-enable" value=""/>
@@ -461,7 +461,7 @@
         <property key="programoptions.preservedataflash.ranges"
                   value="${programoptions.preservedataflash.ranges}"/>
         <property key="programoptions.preserveeeprom" value="true"/>
-        <property key="programoptions.preserveeeprom.ranges" value="310000-3103ff"/>
+        <property key="programoptions.preserveeeprom.ranges" value="0-ff"/>
         <property key="programoptions.preserveprogram.ranges" value=""/>
         <property key="programoptions.preserveprogramrange" value="false"/>
         <property key="programoptions.preserveuserid" value="false"/>

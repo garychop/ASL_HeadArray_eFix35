@@ -132,7 +132,7 @@ struct
 //	DAC_LEFT_DAC_VAL_MANIP_DIR, DAC_RIGHT_DAC_VAL_MANIP_DIR, DAC_FWD_DAC_VAL_MANIP_DIR, DAC_REV_DAC_VAL_MANIP_DIR
 //};
 
-static volatile bool wait_for_neutral = false;
+static volatile bool g_WaitForNeutral = false;
 static volatile bool neutral_test_fail = false;
 
 /* ***********************   Function Prototypes   ************************ */
@@ -408,10 +408,15 @@ bool headArrayNeutralTestFail(void)
 //-------------------------------
 void SetNeedForNeutralTest (void)
 {
-	wait_for_neutral = true;
+	g_WaitForNeutral = true;
 }
 
 /* ********************   Private Function Definitions   ****************** */
+int myA = 0;
+void doThis(void)
+{
+    ++myA;
+}
 
 //-------------------------------
 // Function: HeadArrayInputControlTask
@@ -422,7 +427,8 @@ void SetNeedForNeutralTest (void)
 static void HeadArrayInputControlTask(void)
 {
     task_open();
-	
+//	void (*myState)(void);
+    
 	bool outputs_are_off = false;
 	StopWatch_t neutral_sw;
 
@@ -433,14 +439,18 @@ static void HeadArrayInputControlTask(void)
 	}
 	
     // Wait for head array to be in a neutral state on boot
-    if (appCommonIsPowerUpInIdleEnabled() == false)
-        wait_for_neutral = true;
+//    if (appCommonIsPowerUpInIdleEnabled() == false)
+//        g_WaitForNeutral = true;
 
+//    myState = doThis;
+    
 	while (1)
 	{
-		CheckInputs();
+		CheckInputs();              // Read the Pad sensor into memory.
+        
+//        myState();
 
-		if (wait_for_neutral)
+		if (g_WaitForNeutral)
 		{
 			if (!stopwatchIsActive(&neutral_sw))
 			{
@@ -459,7 +469,7 @@ static void HeadArrayInputControlTask(void)
 				{
 					stopwatchStop(&neutral_sw);
 					neutral_test_fail = false;
-                    wait_for_neutral = false;
+                    g_WaitForNeutral = false;
 				}
 			}
 			else
@@ -475,6 +485,43 @@ static void HeadArrayInputControlTask(void)
 				event_signal(genOutCtrlAppWakeEvent());
 			}
             
+                if (g_PadInfo[HEAD_ARRAY_SENSOR_CENTER].m_CurrentPadStatus != g_PadInfo[HEAD_ARRAY_SENSOR_CENTER].m_PreviousPadStatus)
+                {
+                    if (g_PadInfo[HEAD_ARRAY_SENSOR_CENTER].m_CurrentPadStatus)
+                        GenOutCtrlApp_SetStateAll(GEN_OUT_FORWARD_PAD_ACTIVE);
+                    else
+                        GenOutCtrlApp_SetStateAll(GEN_OUT_FORWARD_PAD_INACTIVE);
+                    g_PadInfo[HEAD_ARRAY_SENSOR_CENTER].m_PreviousPadStatus = g_PadInfo[HEAD_ARRAY_SENSOR_CENTER].m_CurrentPadStatus;
+                }
+            
+                if (g_PadInfo[HEAD_ARRAY_SENSOR_LEFT].m_CurrentPadStatus != g_PadInfo[HEAD_ARRAY_SENSOR_LEFT].m_PreviousPadStatus)
+                {
+                    if (g_PadInfo[HEAD_ARRAY_SENSOR_LEFT].m_CurrentPadStatus)
+                        GenOutCtrlApp_SetStateAll(GEN_OUT_LEFT_PAD_ACTIVE);
+                    else
+                        GenOutCtrlApp_SetStateAll(GEN_OUT_LEFT_PAD_INACTIVE);
+                    g_PadInfo[HEAD_ARRAY_SENSOR_LEFT].m_PreviousPadStatus = g_PadInfo[HEAD_ARRAY_SENSOR_LEFT].m_CurrentPadStatus;
+                }
+
+                if (g_PadInfo[HEAD_ARRAY_SENSOR_RIGHT].m_CurrentPadStatus != g_PadInfo[HEAD_ARRAY_SENSOR_RIGHT].m_PreviousPadStatus)
+                {
+                    if (g_PadInfo[HEAD_ARRAY_SENSOR_RIGHT].m_CurrentPadStatus)
+                        GenOutCtrlApp_SetStateAll(GEN_OUT_RIGHT_PAD_ACTIVE);
+                    else
+                        GenOutCtrlApp_SetStateAll(GEN_OUT_RIGHT_PAD_INACTIVE);
+                    g_PadInfo[HEAD_ARRAY_SENSOR_RIGHT].m_PreviousPadStatus = g_PadInfo[HEAD_ARRAY_SENSOR_RIGHT].m_CurrentPadStatus;
+                }
+//                            event_signal(genOutCtrlAppWakeEvent());
+//            case 1:
+//                GenOutCtrlApp_SetStateAll(GEN_OUT_REVERSE_PAD_INACTIVE);
+//                break;
+//            case 2:
+//                GenOutCtrlApp_SetStateAll(GEN_OUT_LEFT_PAD_INACTIVE);
+//                break;
+//            case 3:
+//                GenOutCtrlApp_SetStateAll(GEN_OUT_RIGHT_PAD_INACTIVE);
+//                break;
+
 			if (SetOutputs() && !outputs_are_off)
 			{
 				outputs_are_off = true;
@@ -713,15 +760,13 @@ static void MirrorDigitalInputOnBluetoothOutput(void)
 //-------------------------------
 static bool InNeutralState(void)
 {
-//	if ((headArrayOutputValue(HEAD_ARRAY_OUT_AXIS_LEFT_RIGHT) == neutral_DAC_setting) &&
-//		(headArrayOutputValue(HEAD_ARRAY_OUT_AXIS_FWD_REV) == neutral_DAC_setting))
-//	{
-		return true;
-//	}
-//	else
-//	{
-//		return false;
-//	}
+    bool active = true;
+	for (int i = 0; i < (int) HEAD_ARRAY_SENSOR_EOL; i++)
+	{
+        if (!g_PadInfo[i].m_CurrentPadStatus)
+            active = false;
+	}
+    return active;
 }
 
 //-------------------------------
@@ -760,7 +805,7 @@ static bool SyncWithEeprom(void)
 		need_to_send_event = SendStateRequestToLedControlModule();
         
         // Must wait for head array to be in a neutral state. when switching to a new active feature.
-        wait_for_neutral = true;
+        g_WaitForNeutral = true;
 	}
 
 //	head_arr_input_type[(int)HEAD_ARRAY_SENSOR_LEFT] = (HeadArrayInputType_t)eepromEnumGet(EEPROM_STORED_ITEM_LEFT_PAD_INPUT_TYPE);
