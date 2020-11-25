@@ -418,16 +418,18 @@ static void ControlTask(void)
 
         // Turn the BLUE Bluetooth LED on/off based upon the Bluetooth feature
         // being enabled.
+#ifdef ASL110
         if ((eeprom8bitGet(EEPROM_STORED_ITEM_ENABLED_FEATURES) & FUNC_FEATURE_OUT_CTRL_TO_BT_MODULE_BIT_MASK) > 0)
         {
-            //GenOutCtrl_Disable (GEN_OUT_CTRL_ID_BT_LED);
-            // GenOutCtrlApp_SetStateAll (GEN_OUT_BLUETOOTH_ENABLED);
+            GenOutCtrl_Disable (GEN_OUT_CTRL_ID_BT_LED);
+            GenOutCtrlApp_SetStateAll (GEN_OUT_BLUETOOTH_ENABLED);
         }
         else 
         {
-            //GenOutCtrl_Enable (GEN_OUT_CTRL_ID_BT_LED);
-            //GenOutCtrlApp_SetStateAll (GEN_OUT_BLUETOOTH_DISABLED);
+            GenOutCtrl_Enable (GEN_OUT_CTRL_ID_BT_LED);
+            GenOutCtrlApp_SetStateAll (GEN_OUT_BLUETOOTH_DISABLED);
         }
+#endif 
         
 		task_wait(MILLISECONDS_TO_TICKS(GENERAL_OUTPUT_CTRL_UPDATE_RATE_ms));
         GenOutCtrl_TickUpdateAll_ms(stopwatchTimeElapsed(&task_time_elapsed_sw, true));

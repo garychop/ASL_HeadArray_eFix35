@@ -63,11 +63,7 @@ inline static void ManageEepromDataFlush(void);
 //-------------------------------
 void AppCommonInit(void)
 {
-    // If the POWER UP IN IDLE flag is set then start the Head Array in idle mode.
-   	if ((eeprom8bitGet(EEPROM_STORED_ITEM_ENABLED_FEATURES) & FUNC_FEATURE_POWER_UP_IN_IDLE_BIT_MASK) > 0)
-        device_is_active = false;
-    else 
-        device_is_active = true;
+    device_is_active = false;
     
     device_in_calibration = false;
 
@@ -82,38 +78,34 @@ void AppCommonInit(void)
 //-------------------------------
 bool appCommonFeatureIsEnabled(FunctionalFeature_t feature)
 {
-	uint8_t feature_mask;
+//	uint8_t feature_mask;
+//
+//	switch (feature)
+//	{
+//		case FUNC_FEATURE_POWER_ON_OFF:
+//			feature_mask = FUNC_FEATURE_POWER_ON_OFF_BIT_MASK;
+//			break;
+//
+//		case FUNC_FEATURE_OUT_CTRL_TO_BT_MODULE:
+//			feature_mask = FUNC_FEATURE_OUT_CTRL_TO_BT_MODULE_BIT_MASK;
+//			break;
+//
+//		case FUNC_FEATURE_OUT_NEXT_FUNCTION:
+//			feature_mask = FUNC_FEATURE_NEXT_FUNCTION_BIT_MASK;
+//			break;
+//
+//        case FUNC_FEATURE_RNET_SEATING:
+//            feature_mask = FUNC_FEATURE_RNET_SEATING_MASK;
+//            break;
+//
+//		case FUNC_FEATURE_OUT_NEXT_PROFILE:
+//		default:
+//			feature_mask = FUNC_FEATURE_NEXT_PROFILE_BIT_MASK;
+//			break;
+//	}
 
-	switch (feature)
-	{
-		case FUNC_FEATURE_POWER_ON_OFF:
-			feature_mask = FUNC_FEATURE_POWER_ON_OFF_BIT_MASK;
-			break;
-
-		case FUNC_FEATURE_OUT_CTRL_TO_BT_MODULE:
-			feature_mask = FUNC_FEATURE_OUT_CTRL_TO_BT_MODULE_BIT_MASK;
-			break;
-
-		case FUNC_FEATURE_OUT_NEXT_FUNCTION:
-			feature_mask = FUNC_FEATURE_NEXT_FUNCTION_BIT_MASK;
-			break;
-
-        case FUNC_FEATURE_RNET_SEATING:
-            feature_mask = FUNC_FEATURE_RNET_SEATING_MASK;
-            break;
-
-        // The following feature is set the 2nd feature byte, so we are making an "exception" to the mask setting.
-        case FUNC_FEATURE2_RNET_SLEEP:
-            return ((eeprom8bitGet (EEPROM_STORED_ITEM_ENABLED_FEATURES_2) & FUNC_FEATURE2_RNET_SLEEP_BIT_MASK) == FUNC_FEATURE2_RNET_SLEEP_BIT_MASK);
-            break;
-            
-		case FUNC_FEATURE_OUT_NEXT_PROFILE:
-		default:
-			feature_mask = FUNC_FEATURE_NEXT_PROFILE_BIT_MASK;
-			break;
-	}
-
-	return ((eeprom8bitGet(EEPROM_STORED_ITEM_ENABLED_FEATURES) & feature_mask) > 0);
+//	return ((eeprom8bitGet(EEPROM_STORED_ITEM_ENABLED_FEATURES) & feature_mask) > 0);
+    return 0;
 }
 
 //-------------------------------
@@ -124,7 +116,7 @@ bool appCommonFeatureIsEnabled(FunctionalFeature_t feature)
 //-------------------------------
 bool appCommonSoundEnabled(void)
 {
-	return ((eeprom8bitGet(EEPROM_STORED_ITEM_ENABLED_FEATURES) & FUNC_FEATURE_SOUND_ENABLED_BIT_MASK) > 0);
+    return (IsBeepEnabled());
 }
 
 //-------------------------------
@@ -133,10 +125,13 @@ bool appCommonSoundEnabled(void)
 // Description: Evaluates the Power Up In Idle feature.
 // Returns: true if Power Up In Idle feature is enabled else false.
 //-------------------------------
+#ifdef ASL110
 bool appCommonIsPowerUpInIdleEnabled (void)
 {
-	return ((eeprom8bitGet(EEPROM_STORED_ITEM_ENABLED_FEATURES) & FUNC_FEATURE_POWER_UP_IN_IDLE_BIT_MASK) > 0);
+	//return ((eeprom8bitGet(EEPROM_STORED_ITEM_ENABLED_FEATURES) & FUNC_FEATURE_POWER_UP_IN_IDLE_BIT_MASK) > 0);
+    return false;
 }
+#endif
 
 //-------------------------------
 // Function: appCommonGetCurrentFeature
@@ -145,7 +140,8 @@ bool appCommonIsPowerUpInIdleEnabled (void)
 
 FunctionalFeature_t appCommonGetCurrentFeature(void)
 {
-    return (FunctionalFeature_t)eepromEnumGet(EEPROM_STORED_ITEM_CURRENT_ACTIVE_FEATURE);
+    //return (FunctionalFeature_t)eepromEnumGet(EEPROM_STORED_ITEM_CURRENT_ACTIVE_FEATURE);
+    return (FunctionalFeature_t)0;
 }
 
 //-------------------------------
@@ -156,7 +152,8 @@ FunctionalFeature_t appCommonGetCurrentFeature(void)
 //-------------------------------
 FunctionalFeature_t appCommonGetPreviousEnabledFeature(void)
 {
-	FunctionalFeature_t feature = (FunctionalFeature_t)eepromEnumGet(EEPROM_STORED_ITEM_CURRENT_ACTIVE_FEATURE);
+    FunctionalFeature_t feature = FUNC_FEATURE_DRIVING;
+    
 	uint8_t numberFeaturesChecked;
 
     for (numberFeaturesChecked = 0; numberFeaturesChecked < FUNC_FEATURE_EOL; ++ numberFeaturesChecked)
@@ -172,8 +169,7 @@ FunctionalFeature_t appCommonGetPreviousEnabledFeature(void)
 			return feature;
 		}
 	}
-
-	return (FunctionalFeature_t)eepromEnumGet(EEPROM_STORED_ITEM_CURRENT_ACTIVE_FEATURE);
+    return feature;
 }
 
 //-------------------------------
@@ -184,7 +180,7 @@ FunctionalFeature_t appCommonGetPreviousEnabledFeature(void)
 //-------------------------------
 FunctionalFeature_t appCommonGetNextFeature (void)
 {
-	FunctionalFeature_t next_feature = (FunctionalFeature_t)eepromEnumGet(EEPROM_STORED_ITEM_CURRENT_ACTIVE_FEATURE);
+	FunctionalFeature_t next_feature = FUNC_FEATURE_DRIVING;
 	uint8_t numberFeaturesChecked;
 
     for (numberFeaturesChecked = 0; numberFeaturesChecked < FUNC_FEATURE_EOL; ++ numberFeaturesChecked)
@@ -281,7 +277,7 @@ static void SystemSupervisorTask(void)
 	{
 		task_wait(MILLISECONDS_TO_TICKS(SYS_SUPERVISOR_TASK_EXECUTION_RATE_ms));
 		
-		ManageEepromDataFlush();
+		//ManageEepromDataFlush();
 	}
 	task_close();
 }
@@ -293,6 +289,8 @@ static void SystemSupervisorTask(void)
 // 		finish updating all values of interest to them to help manage wear on the EEPROM.
 //
 //-------------------------------
+#ifdef ASL110
+
 inline static void ManageEepromDataFlush(void)
 {
 // This is the time to wait for new updates to persistent data (stored in RAM) before flushing to the EEPROM.
@@ -318,6 +316,7 @@ inline static void ManageEepromDataFlush(void)
 		}
 	}
 }
+#endif // #ifdef ASL110
 
 // end of file.
 //-------------------------------------------------------------------------

@@ -570,25 +570,29 @@ static void CheckInputs(void)
 static bool SetOutputs(void)
 {
 	bool turn_outputs_off = true;
-
+    FunctionalFeature_t current_feature = FUNC_FEATURE_DRIVING;
+    
 	if (AppCommonDeviceActiveGet())
 	{
 		// "Power is on"
 		if (!AppCommonCalibrationActiveGet())
 		{
 			// Not in calibration mode.
-			switch ((FunctionalFeature_t)eepromEnumGet(EEPROM_STORED_ITEM_CURRENT_ACTIVE_FEATURE))
+			switch (current_feature)
 			{
-				case FUNC_FEATURE_POWER_ON_OFF:
-				case FUNC_FEATURE_OUT_NEXT_FUNCTION:
-				case FUNC_FEATURE_OUT_NEXT_PROFILE:
-                case FUNC_FEATURE_RNET_SEATING:
-					// Direct control of the wheelchair from this device
-					//dacBspSet(DAC_SELECT_FORWARD_BACKWARD, headArrayOutputValue(HEAD_ARRAY_OUT_AXIS_FWD_REV));
-					//dacBspSet(DAC_SELECT_LEFT_RIGHT, headArrayOutputValue(HEAD_ARRAY_OUT_AXIS_LEFT_RIGHT));
-					turn_outputs_off = false;
-					break;
-				
+//				case FUNC_FEATURE_POWER_ON_OFF:
+//				case FUNC_FEATURE_OUT_NEXT_FUNCTION:
+//				case FUNC_FEATURE_OUT_NEXT_PROFILE:
+//                case FUNC_FEATURE_RNET_SEATING:
+//					// Direct control of the wheelchair from this device
+//					//dacBspSet(DAC_SELECT_FORWARD_BACKWARD, headArrayOutputValue(HEAD_ARRAY_OUT_AXIS_FWD_REV));
+//					//dacBspSet(DAC_SELECT_LEFT_RIGHT, headArrayOutputValue(HEAD_ARRAY_OUT_AXIS_LEFT_RIGHT));
+//					turn_outputs_off = false;
+//					break;
+
+                case FUNC_FEATURE_DRIVING:
+                    break;
+                    
 				case FUNC_FEATURE_OUT_CTRL_TO_BT_MODULE:
 					// Control sent to a Bluetooth module.
 					MirrorDigitalInputOnBluetoothOutput();
@@ -784,7 +788,7 @@ static bool SyncWithEeprom(void)
 {
 	uint16_t range;
     bool need_to_send_event = false;
-	FunctionalFeature_t new_feature = (FunctionalFeature_t)eepromEnumGet(EEPROM_STORED_ITEM_CURRENT_ACTIVE_FEATURE);
+	FunctionalFeature_t new_feature = FUNC_FEATURE_DRIVING;
 
 	if (curr_active_feature != new_feature)
 	{

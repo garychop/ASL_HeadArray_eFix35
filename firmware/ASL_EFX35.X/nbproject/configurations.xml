@@ -15,6 +15,7 @@
         <itemPath>app/inc/general_output_ctrl_cfg.h</itemPath>
         <itemPath>app/inc/ha_hhp_interface_app.h</itemPath>
         <itemPath>app/inc/rtos_task_priorities.h</itemPath>
+        <itemPath>app/inc/eFix_Communication.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f1" displayName="bsp" projectFiles="true">
         <itemPath>bsp/inc/beeper_bsp.h</itemPath>
@@ -27,6 +28,7 @@
         <itemPath>bsp/inc/general_output_ctrl_bsp.h</itemPath>
         <itemPath>bsp/inc/ha_hhp_interface_bsp.h</itemPath>
         <itemPath>bsp/inc/isrs.h</itemPath>
+        <itemPath>device/RS232.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f6" displayName="cocoOS" projectFiles="true">
         <itemPath>cocoos/inc/cocoos.h</itemPath>
@@ -83,6 +85,7 @@
         <itemPath>app/user_button.c</itemPath>
         <itemPath>app/general_output_ctrl_app.c</itemPath>
         <itemPath>app/ha_hhp_interface_app.c</itemPath>
+        <itemPath>app/eFix_Communication.c</itemPath>
       </logicalFolder>
       <logicalFolder name="XC8" displayName="bsp" projectFiles="true">
         <itemPath>bsp/XC8/beeper_bsp.c</itemPath>
@@ -94,6 +97,7 @@
         <itemPath>bsp/XC8/user_button_bsp.c</itemPath>
         <itemPath>bsp/XC8/general_output_ctrl_bsp.c</itemPath>
         <itemPath>bsp/XC8/ha_hhp_interface_bsp.c</itemPath>
+        <itemPath>device/RS232.c</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="cocoOS" projectFiles="true">
         <itemPath>cocoos/src/os_assert.c</itemPath>
@@ -261,6 +265,7 @@
                   value="C:\Program Files (x86)/Microchip/MPLABX/v5.30/mplab_platform/mplablibs/modules/ext/PICKIT3.jar/PK3FW_015602.jam"/>
         <property key="ToolFirmwareOption.UseLatestFirmware" value="true"/>
         <property key="debugoptions.useswbreakpoints" value="false"/>
+        <property key="firmware.download.all" value="false"/>
         <property key="hwtoolclock.frcindebug" value="false"/>
         <property key="memories.aux" value="false"/>
         <property key="memories.bootflash" value="true"/>
@@ -283,7 +288,7 @@
         <property key="programoptions.preservedataflash" value="false"/>
         <property key="programoptions.preservedataflash.ranges"
                   value="${programoptions.preservedataflash.ranges}"/>
-        <property key="programoptions.preserveeeprom" value="true"/>
+        <property key="programoptions.preserveeeprom" value="false"/>
         <property key="programoptions.preserveeeprom.ranges" value="0-ff"/>
         <property key="programoptions.preserveprogram.ranges" value=""/>
         <property key="programoptions.preserveprogramrange" value="false"/>
@@ -460,7 +465,7 @@
         <property key="programoptions.preservedataflash" value="false"/>
         <property key="programoptions.preservedataflash.ranges"
                   value="${programoptions.preservedataflash.ranges}"/>
-        <property key="programoptions.preserveeeprom" value="true"/>
+        <property key="programoptions.preserveeeprom" value="false"/>
         <property key="programoptions.preserveeeprom.ranges" value="0-ff"/>
         <property key="programoptions.preserveprogram.ranges" value=""/>
         <property key="programoptions.preserveprogramrange" value="false"/>
@@ -470,7 +475,7 @@
         <property key="programoptions.testmodeentrymethod" value="VDDFirst"/>
         <property key="programoptions.usehighvoltageonmclr" value="false"/>
         <property key="programoptions.uselvpprogramming" value="false"/>
-        <property key="voltagevalue" value="3.375"/>
+        <property key="voltagevalue" value="5.0"/>
       </PICkit3PlatformTool>
       <XC8-CO>
         <property key="coverage-enable" value=""/>

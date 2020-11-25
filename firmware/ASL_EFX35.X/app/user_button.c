@@ -122,7 +122,7 @@ void userButtonInit(void)
     // People were indicating that the switch response is sluggish. I reduced the time from 100 to 50 and
     // it is much more responsive and still provides sufficient debounce time.
 	time_for_func_to_trigger_ms[(int)USER_BTN_PRESS_SHORT] = 50; // 100;
-	time_for_func_to_trigger_ms[(int)USER_BTN_PRESS_LONG] = eeprom16bitGet(EEPROM_STORED_ITEM_USER_BTN_LONG_PRESS_ACT_TIME);
+	time_for_func_to_trigger_ms[(int)USER_BTN_PRESS_LONG] = 1000;
 
     (void)task_create(UserButtonMonitorTask , NULL, USER_BTN_MGMT_TASK_PRIO, NULL, 0, 0);
 }
@@ -150,6 +150,18 @@ uint8_t GetSwitchStatus(void)
 }
 
 //-------------------------------
+// Function: IsBeepEnabled
+// Description: Get the status of the DIP switch for the Beep
+// Returns: "true" if the Beeps should be making obnoxious noise or
+//      "false" to operate in silence.
+//-------------------------------
+
+bool IsBeepEnabled(void)
+{
+    return false;
+}
+
+//-------------------------------
 // Function: userButtonMonitorTick
 //
 // Description: Button monitoring process.
@@ -167,9 +179,9 @@ static void UserButtonMonitorTask (void)
 
     while (1)
     {
-        feature2 = eeprom8bitGet (EEPROM_STORED_ITEM_ENABLED_FEATURES_2);
+        feature2 = 0; 
         // Get the Long Press time each cycle to ensure that if it's changed during programming, it is used before power cycle.
-    	time_for_func_to_trigger_ms[(int)USER_BTN_PRESS_LONG] = eeprom16bitGet(EEPROM_STORED_ITEM_USER_BTN_LONG_PRESS_ACT_TIME);
+    	time_for_func_to_trigger_ms[(int)USER_BTN_PRESS_LONG] = 1000;
         currentButtonPattern = GetSwitchStatus();   // Get current switch pattern.
 
         // State INIT_BUTTON_STATE ---------------------------------------------------
@@ -336,8 +348,7 @@ static void CarryOutShortPressAction(void)
 	{
 		switch (feature)
 		{
-			case FUNC_FEATURE_POWER_ON_OFF:
-				AppCommonForceActiveState(AppCommonDeviceActiveGet() ? false : true);
+			case FUNC_FEATURE_DRIVING:
 				break;
 
 			case FUNC_FEATURE_OUT_CTRL_TO_BT_MODULE:
@@ -434,13 +445,13 @@ bool IsModeSwitchActive()
 //-------------------------------
 static FunctionalFeature_t FeatureIsValid(bool set_to_next)
 {
-	FunctionalFeature_t curr_active_feature = (FunctionalFeature_t)eepromEnumGet(EEPROM_STORED_ITEM_CURRENT_ACTIVE_FEATURE);
+	FunctionalFeature_t curr_active_feature = FUNC_FEATURE_DRIVING; // (FunctionalFeature_t)eepromEnumGet(EEPROM_STORED_ITEM_CURRENT_ACTIVE_FEATURE);
 	
 	if (set_to_next || !appCommonFeatureIsEnabled(curr_active_feature))
 	{
 		// Either forcing to change to next feature, or feature set has changed and we need to correct the invalid system state.
 		curr_active_feature = appCommonGetNextFeature();
-		eepromEnumSet(EEPROM_STORED_ITEM_CURRENT_ACTIVE_FEATURE, (EepromStoredEnumType_t)curr_active_feature);
+		//eepromEnumSet(EEPROM_STORED_ITEM_CURRENT_ACTIVE_FEATURE, (EepromStoredEnumType_t)curr_active_feature);
 	}
 
 	// This will already be of value FUNC_FEATURE_EOL if we do not have an available feature to use.

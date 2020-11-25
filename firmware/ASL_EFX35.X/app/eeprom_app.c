@@ -41,6 +41,8 @@
 
 /* ******************************   Macros   ****************************** */
 
+#ifdef ASL110
+
 #define EEPROM_INITIALIZED_VAL						((uint8_t)0xA5)
 
 // Size of supported data types
@@ -49,7 +51,11 @@
 #define ITEM_TYPE_ENUM_SIZE_BYTES					((uint8_t)1)
 #define ITEM_TYPE_UINT16_SIZE_BYTES					((uint8_t)2)
 
+#endif // #ifdef ASL110
+
 /* **************************    Memory Map     *************************** */
+
+#ifdef ASL110
 
 #define MM_EEPROM_INITIALIZED 						((uint8_t)0x00)
 
@@ -103,7 +109,11 @@
 // Must be last item in this list. Denotes the total amount of real estate taken up in EEPROM.
 #define MM_NUM_BYTES								((uint8_t)MM_RIGHT_PAD_MIN_DRIVE_SPEED + ITEM_TYPE_UINT8_SIZE_BYTES)
 
+#endif // #ifdef ASL110
+
 /* ******************************   Types   ******************************* */
+
+#ifdef ASL110
 
 typedef enum
 {
@@ -115,6 +125,9 @@ typedef enum
 	// Nothing else may be defined past this point!
 	ITEM_TYPE_EOL
 } ItemType_t;
+#endif // #ifdef ASL110
+
+#ifdef ASL110
 
 typedef struct
 {
@@ -126,6 +139,10 @@ typedef struct
 	// True when an item has been updated in RAM but not in EEPROM.
 	bool need_to_save;
 } ItemInfo_t;
+
+#endif // #ifdef ASL110
+
+#ifdef ASL110
 
 // No reason to pack the structure, the MCU is 8-bit.
 // This structure can only be ADDED TO or APPENDED. It must never be changed.
@@ -190,8 +207,11 @@ typedef union
 	EepromDataItems_t items;
 	uint8_t bytes[MM_NUM_BYTES];
 } EepromData_t;
+#endif // #ifdef ASL110
 
 /* ***********************   File Scope Variables   *********************** */
+
+#ifdef ASL110
 
 static volatile EepromData_t eeprom_data;
 static volatile uint8_t num_times_any_item_has_updated;
@@ -296,11 +316,17 @@ static ItemInfo_t items_info[] =
     // EEPROM_STORED_ITEM_ENABLED_FEATURES_2
 	{ITEM_TYPE_UINT8,		MM_ENABLED_FEATURES_2,						false}
 };
+#endif // #ifdef ASL110
+
+#ifdef ASL110
 
 static volatile bool at_least_one_item_requires_saving;
 
+#endif // #ifdef ASL110
+
 /* ***********************   Function Prototypes   ************************ */
 
+#ifdef ASL110
 static bool SyncWithEeprom(void);
 static void EepromIsProgrammedValWrite(void);
 
@@ -312,6 +338,7 @@ inline static uint16_t Read16bitVal(uint8_t address);
 
 inline static void Write32bitVal(uint8_t address, uint32_t new_val);
 inline static uint32_t Read32bitVal(uint8_t address);
+#endif // #ifdef ASL110
 
 /* *******************   Public Function Definitions   ******************** */
 
@@ -323,6 +350,9 @@ inline static uint32_t Read32bitVal(uint8_t address);
 // return: true if EEPROM was initialized prior to now, false if it was initialized here.
 //
 //-------------------------------
+
+#ifdef ASL110
+
 bool eepromAppInit(void)
 {
     volatile int8_t EEPROM_Version;
@@ -390,6 +420,7 @@ bool eepromAppInit(void)
     
 	return eeprom_has_been_initialized;
 }
+#endif // #ifdef ASL110
 
 //-------------------------------
 // Function: eepromAppNumTimesAnyDataHasBeenUpdated
@@ -399,10 +430,15 @@ bool eepromAppInit(void)
 //		when any data has been updated, ensuring that this value is checked quicker than this value may be updated >256 times.
 //
 //-------------------------------
+
+#ifdef ASL110
+
 uint8_t eepromAppNumTimesAnyDataHasBeenUpdated(void)
 {
 	return num_times_any_item_has_updated;
 }
+
+#endif // #ifdef ASL110
 
 //-------------------------------
 // Function: eepromFlush
@@ -411,6 +447,8 @@ uint8_t eepromAppNumTimesAnyDataHasBeenUpdated(void)
 // 	write to EEPROM and wear it out.
 //
 //-------------------------------
+#ifdef ASL110
+
 void eepromFlush(bool force_save_all)
 {
 	if (force_save_all || at_least_one_item_requires_saving)
@@ -446,6 +484,7 @@ void eepromFlush(bool force_save_all)
 		at_least_one_item_requires_saving = false;
 	}
 }
+#endif // #ifdef ASL110
 
 //-------------------------------
 // Function: eepromBoolSet
@@ -453,6 +492,8 @@ void eepromFlush(bool force_save_all)
 // Description: Sets a boolean type item's value.
 //
 //-------------------------------
+#ifdef ASL110
+
 void eepromBoolSet(EepromItemId_t item_id, bool val)
 {
 	ItemInfo_t *item_info = &items_info[(int)item_id];
@@ -466,6 +507,7 @@ void eepromBoolSet(EepromItemId_t item_id, bool val)
 		num_times_any_item_has_updated++;
 	}
 }
+#endif // #ifdef ASL110
 
 //-------------------------------
 // Function: eepromBoolGet
@@ -473,11 +515,14 @@ void eepromBoolSet(EepromItemId_t item_id, bool val)
 // Description: Gets a boolean type item's value.
 //
 //-------------------------------
+#ifdef ASL110
+
 bool eepromBoolGet(EepromItemId_t item_id)
 {
 	ASSERT(items_info[(int)item_id].type == ITEM_TYPE_BOOL);
 	return (bool)eeprom_data.bytes[items_info[(int)item_id].start_addr];
 }
+#endif // #ifdef ASL110
 
 //-------------------------------
 // Function: eepromEnumSet
@@ -485,6 +530,8 @@ bool eepromBoolGet(EepromItemId_t item_id)
 // Description: Sets an enumerated type item's value.
 //
 //-------------------------------
+#ifdef ASL110
+
 void eepromEnumSet(EepromItemId_t item_id, EepromStoredEnumType_t val)
 {
 	ItemInfo_t *item_info = &items_info[(int)item_id];
@@ -498,6 +545,7 @@ void eepromEnumSet(EepromItemId_t item_id, EepromStoredEnumType_t val)
 		num_times_any_item_has_updated++;
 	}
 }
+#endif // #ifdef ASL110
 
 //-------------------------------
 // Function: eepromEnumGet
@@ -505,11 +553,14 @@ void eepromEnumSet(EepromItemId_t item_id, EepromStoredEnumType_t val)
 // Description: Gets an enumerated type item's value.
 //
 //-------------------------------
+#ifdef ASL110
+
 EepromStoredEnumType_t eepromEnumGet(EepromItemId_t item_id)
 {
 	ASSERT(items_info[(int)item_id].type == ITEM_TYPE_ENUM);
 	return (EepromStoredEnumType_t)eeprom_data.bytes[items_info[(int)item_id].start_addr];
 }
+#endif // #ifdef ASL110
 
 //-------------------------------
 // Function: eeprom8bitSet
@@ -517,6 +568,8 @@ EepromStoredEnumType_t eepromEnumGet(EepromItemId_t item_id)
 // Description: Sets an 8-bit type item's value.
 //
 //-------------------------------
+#ifdef ASL110
+
 void eeprom8bitSet(EepromItemId_t item_id, uint8_t val)
 {
 	ItemInfo_t *item_info = &items_info[(int)item_id];
@@ -530,6 +583,7 @@ void eeprom8bitSet(EepromItemId_t item_id, uint8_t val)
 		num_times_any_item_has_updated++;
 	}
 }
+#endif // #ifdef ASL110
 
 //-------------------------------
 // Function: eeprom8bitGet
@@ -537,11 +591,14 @@ void eeprom8bitSet(EepromItemId_t item_id, uint8_t val)
 // Description: Gets an 8-bit type item's value.
 //
 //-------------------------------
+#ifdef ASL110
+
 uint8_t eeprom8bitGet(EepromItemId_t item_id)
 {
 	ASSERT(items_info[(int)item_id].type == ITEM_TYPE_UINT8);
 	return (EepromStoredEnumType_t)eeprom_data.bytes[items_info[(int)item_id].start_addr];
 }
+#endif // #ifdef ASL110
 
 //-------------------------------
 // Function: eeprom16bitSet
@@ -549,6 +606,8 @@ uint8_t eeprom8bitGet(EepromItemId_t item_id)
 // Description: Sets a 16-bit type item's value.
 //
 //-------------------------------
+#ifdef ASL110
+
 void eeprom16bitSet(EepromItemId_t item_id, uint16_t val)
 {
 	ItemInfo_t *item_info = &items_info[(int)item_id];
@@ -562,6 +621,7 @@ void eeprom16bitSet(EepromItemId_t item_id, uint16_t val)
 		num_times_any_item_has_updated++;
 	}
 }
+#endif // #ifdef ASL110
 
 //-------------------------------
 // Function: eeprom16bitGet
@@ -569,11 +629,14 @@ void eeprom16bitSet(EepromItemId_t item_id, uint16_t val)
 // Description: Gets a 16-bit type item's value.
 //
 //-------------------------------
+#ifdef ASL110
+
 uint16_t eeprom16bitGet(EepromItemId_t item_id)
 {
 	ASSERT(items_info[(int)item_id].type == ITEM_TYPE_UINT16);
 	return *((uint16_t *)&eeprom_data.bytes[items_info[(int)item_id].start_addr]);
 }
+#endif // #ifdef ASL110
 
 /* ********************   Private Function Definitions   ****************** */
 
@@ -586,6 +649,9 @@ uint16_t eeprom16bitGet(EepromItemId_t item_id)
 // 	are synced with the corresponding item value in EEPROM.
 //
 //-------------------------------
+
+#ifdef ASL110
+
 static bool SyncWithEeprom(void)
 {
 	uint8_t is_programmed_val = Read8bitVal(items_info[EEPROM_STORED_ITEM_EEPROM_INITIALIZED].start_addr);
@@ -625,6 +691,7 @@ static bool SyncWithEeprom(void)
 		return false;
 	}
 }
+#endif // #ifdef ASL110
 
 //-------------------------------
 // Function: SetDefaultValues
@@ -634,17 +701,19 @@ static bool SyncWithEeprom(void)
 // NOTE: When adding/removing an item, be sure to update this function as well!
 //
 //-------------------------------
+#ifdef ASL110
+
 void SetDefaultValues(void)
 {
 	eeprom_data.items.eeprom_intiailized = EEPROM_INITIALIZED_VAL;
 	
-//	eeprom_data.items.left_pad_input_type = (EepromStoredEnumType_t)HEAD_ARR_INPUT_PROPORTIONAL;
-//	eeprom_data.items.right_pad_input_type = (EepromStoredEnumType_t)HEAD_ARR_INPUT_PROPORTIONAL;
-//	eeprom_data.items.center_pad_input_type = (EepromStoredEnumType_t)HEAD_ARR_INPUT_PROPORTIONAL;
+	eeprom_data.items.left_pad_input_type = (EepromStoredEnumType_t)HEAD_ARR_INPUT_PROPORTIONAL;
+	eeprom_data.items.right_pad_input_type = (EepromStoredEnumType_t)HEAD_ARR_INPUT_PROPORTIONAL;
+	eeprom_data.items.center_pad_input_type = (EepromStoredEnumType_t)HEAD_ARR_INPUT_PROPORTIONAL;
 
-//	eeprom_data.items.left_pad_output_map = (EepromStoredEnumType_t)HEAD_ARRAY_OUT_FUNC_LEFT;
-//	eeprom_data.items.right_pad_output_map = (EepromStoredEnumType_t)HEAD_ARRAY_OUT_FUNC_RIGHT;
-//	eeprom_data.items.center_pad_output_map = (EepromStoredEnumType_t)HEAD_ARRAY_OUT_FUNC_FWD;
+	eeprom_data.items.left_pad_output_map = (EepromStoredEnumType_t)HEAD_ARRAY_OUT_FUNC_LEFT;
+	eeprom_data.items.right_pad_output_map = (EepromStoredEnumType_t)HEAD_ARRAY_OUT_FUNC_RIGHT;
+	eeprom_data.items.center_pad_output_map = (EepromStoredEnumType_t)HEAD_ARRAY_OUT_FUNC_FWD;
 
 	eeprom_data.items.user_btn_long_press_act_time = 1000;
 	
@@ -653,34 +722,34 @@ void SetDefaultValues(void)
                                         //FUNC_FEATURE_OUT_CTRL_TO_BT_MODULE_BIT_MASK;
                                         //FUNC_FEATURE_NEXT_FUNCTION_BIT_MASK | 
                                         //FUNC_FEATURE_NEXT_PROFILE_BIT_MASK |
-                                        FUNC_FEATURE_SOUND_ENABLED_BIT_MASK;
-            //0;
+                                        //FUNC_FEATURE_SOUND_ENABLED_BIT_MASK;
+            0;
             
 	eeprom_data.items.current_active_feature = (EepromStoredEnumType_t)FUNC_FEATURE_POWER_ON_OFF;
 
-//	eeprom_data.items.left_pad_min_adc_val = ADC_LEFT_PAD_MIN_VAL;
-//	eeprom_data.items.left_pad_max_adc_val = ADC_LEFT_PAD_MAX_VAL;
-//	eeprom_data.items.left_pad_min_thresh_perc = 2;
-//	eeprom_data.items.left_pad_max_thresh_perc = 30;
+	eeprom_data.items.left_pad_min_adc_val = ADC_LEFT_PAD_MIN_VAL;
+	eeprom_data.items.left_pad_max_adc_val = ADC_LEFT_PAD_MAX_VAL;
+	eeprom_data.items.left_pad_min_thresh_perc = 2;
+	eeprom_data.items.left_pad_max_thresh_perc = 30;
 
-//	eeprom_data.items.right_pad_min_adc_val = ADC_RIGHT_PAD_MIN_VAL;
-//	eeprom_data.items.right_pad_max_adc_val = ADC_RIGHT_PAD_MAX_VAL;
-//	eeprom_data.items.right_pad_min_thresh_perc = 2;
-//	eeprom_data.items.right_pad_max_thresh_perc = 30;
+	eeprom_data.items.right_pad_min_adc_val = ADC_RIGHT_PAD_MIN_VAL;
+	eeprom_data.items.right_pad_max_adc_val = ADC_RIGHT_PAD_MAX_VAL;
+	eeprom_data.items.right_pad_min_thresh_perc = 2;
+	eeprom_data.items.right_pad_max_thresh_perc = 30;
 
-//	eeprom_data.items.ctr_pad_min_adc_val = ADC_CTR_PAD_MIN_VAL;
-//	eeprom_data.items.ctr_pad_max_adc_val = ADC_CTR_PAD_MAX_VAL;
-//	eeprom_data.items.ctr_pad_min_thresh_perc = 2;
-//	eeprom_data.items.ctr_pad_max_thresh_perc = 30;
+	eeprom_data.items.ctr_pad_min_adc_val = ADC_CTR_PAD_MIN_VAL;
+	eeprom_data.items.ctr_pad_max_adc_val = ADC_CTR_PAD_MAX_VAL;
+	eeprom_data.items.ctr_pad_min_thresh_perc = 2;
+	eeprom_data.items.ctr_pad_max_thresh_perc = 30;
 
-//#ifdef USE_12VOLT_REGULATOR
-//    eeprom_data.items.neutral_DAC_counts = 2048+212;        // Mid-point of 12-bit DAC
-//    eeprom_data.items.neutral_DAC_setting = 2040+212;       // Mid-point of 12-bit DAC
-//#else
-//    eeprom_data.items.neutral_DAC_counts = 2048;        // Mid-point of 12-bit DAC
-//    eeprom_data.items.neutral_DAC_setting = 2032;       // Mid-point of 12-bit DAC
-//#endif
-//    eeprom_data.items.neutral_DAC_range = 410;          // Allowable range for 1.2 V swing.
+#ifdef USE_12VOLT_REGULATOR
+    eeprom_data.items.neutral_DAC_counts = 2048+212;        // Mid-point of 12-bit DAC
+    eeprom_data.items.neutral_DAC_setting = 2040+212;       // Mid-point of 12-bit DAC
+#else
+    eeprom_data.items.neutral_DAC_counts = 2048;        // Mid-point of 12-bit DAC
+    eeprom_data.items.neutral_DAC_setting = 2032;       // Mid-point of 12-bit DAC
+#endif
+    eeprom_data.items.neutral_DAC_range = 410;          // Allowable range for 1.2 V swing.
     
     // Added in Version 3
     eeprom_data.items.EEPROM_Version = EEPROM_DATA_STRUCTURE_VERSION;
@@ -690,13 +759,14 @@ void SetDefaultValues(void)
     //eeprom_data.items.Drive_Offset = 20;                // Default drive offset is 20%
 
     // Changed and/or added in Version 5
-//    eeprom_data.items.CenterPad_MinimumDriveSpeed = 20;     // Center Pad minimum speed
-//    eeprom_data.items.LeftPad_MinimumDriveSpeed = 20;       // Left Pad minimum speed
-//    eeprom_data.items.RightPad_MinimumDriveSpeed = 20;      // Right Pad minimum speed
+    eeprom_data.items.CenterPad_MinimumDriveSpeed = 20;     // Center Pad minimum speed
+    eeprom_data.items.LeftPad_MinimumDriveSpeed = 20;       // Left Pad minimum speed
+    eeprom_data.items.RightPad_MinimumDriveSpeed = 20;      // Right Pad minimum speed
     
     // Added in Version 6
     eeprom_data.items.enabled_features2 = 0;                // Feature set 2 is all disabled.
 }
+#endif // #ifdef ASL110
 
 //-------------------------------
 // Function: Write8bitVal
@@ -706,11 +776,14 @@ void SetDefaultValues(void)
 // 		Function calls are computationally expensive, inlining this function in favor of increased speed.
 //
 //-------------------------------
+#ifdef ASL110
+
 inline static void Write8bitVal(uint8_t address, uint8_t new_val)
 {
 	bool op_success = eepromBspWriteByte(address, new_val, 0);
 	ASSERT(op_success);
 }
+#endif // #ifdef ASL110
 
 //-------------------------------
 // Function: Read8bitVal
@@ -720,6 +793,7 @@ inline static void Write8bitVal(uint8_t address, uint8_t new_val)
 // 		Function calls are computationally expensive, inlining this function in favor of increased speed.
 //
 //-------------------------------
+#ifdef ASL110
 inline static uint8_t Read8bitVal(uint8_t address)
 {
 	uint8_t read_val;
@@ -734,6 +808,7 @@ inline static uint8_t Read8bitVal(uint8_t address)
 
 	return read_val;
 }
+#endif // #ifdef ASL110
 
 //-------------------------------
 // Function: Write16bitVal
@@ -743,6 +818,7 @@ inline static uint8_t Read8bitVal(uint8_t address)
 // 		Function calls are computationally expensive, inlining this function in favor of increased speed.
 //
 //-------------------------------
+#ifdef ASL110
 inline static void Write16bitVal(uint8_t address, uint16_t new_val)
 {
 	TypeAccess16Bit_t write_val;
@@ -750,6 +826,7 @@ inline static void Write16bitVal(uint8_t address, uint16_t new_val)
 	bool op_success = eepromBspWriteBuffer(address, 2, write_val.bytes, 0);
 	ASSERT(op_success);
 }
+#endif // #ifdef ASL110
 
 //-------------------------------
 // Function: Read16bitVal
@@ -759,6 +836,7 @@ inline static void Write16bitVal(uint8_t address, uint16_t new_val)
 // 		Function calls are computationally expensive, inlining this function in favor of increased speed.
 //
 //-------------------------------
+#ifdef ASL110
 inline static uint16_t Read16bitVal(uint8_t address)
 {
 	TypeAccess16Bit_t read_val;
@@ -773,6 +851,7 @@ inline static uint16_t Read16bitVal(uint8_t address)
 
 	return read_val.val;
 }
+#endif // #ifdef ASL110
 
 //-------------------------------
 // Function: Write32bitVal
@@ -782,6 +861,7 @@ inline static uint16_t Read16bitVal(uint8_t address)
 // 		Function calls are computationally expensive, inlining this function in favor of increased speed.
 //
 //-------------------------------
+#ifdef ASL110
 inline static void Write32bitVal(uint8_t address, uint32_t new_val)
 {
 	TypeAccess32Bit_t write_val;
@@ -789,6 +869,7 @@ inline static void Write32bitVal(uint8_t address, uint32_t new_val)
 	bool op_success = eepromBspWriteBuffer(address, 4, write_val.bytes, 0);
 	ASSERT(op_success);
 }
+#endif // #ifdef ASL110
 
 //-------------------------------
 // Function: Read32bitVal
@@ -798,6 +879,7 @@ inline static void Write32bitVal(uint8_t address, uint32_t new_val)
 // 		Function calls are computationally expensive, inlining this function in favor of increased speed.
 //
 //-------------------------------
+#ifdef ASL110
 inline static uint32_t Read32bitVal(uint8_t address)
 {
 	TypeAccess32Bit_t read_val;
@@ -811,6 +893,7 @@ inline static uint32_t Read32bitVal(uint8_t address)
 
 	return read_val.val;
 }
+#endif // #ifdef ASL110
 
 // end of file.
 //-------------------------------------------------------------------------

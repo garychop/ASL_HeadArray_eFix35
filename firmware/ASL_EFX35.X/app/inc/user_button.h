@@ -50,6 +50,7 @@ typedef enum
 void userButtonInit(void);
 uint8_t GetSwitchStatus(void);
 bool IsModeSwitchActive(void);
+bool IsBeepEnabled(void);
 
 #endif // USER_BUTTON_H
 

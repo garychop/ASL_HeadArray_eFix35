@@ -38,6 +38,7 @@
 #define EEPROM_DATA_STRUCTURE_VERSION				((uint8_t)0x06)
 
 /* ******************************   Types   ******************************* */
+#ifdef ASL110
 
 typedef enum
 {
@@ -87,8 +88,11 @@ typedef enum
 } EepromItemId_t;
 
 typedef uint8_t EepromStoredEnumType_t;
+#endif // #ifdef ASL110
 
 /* ***********************   Function Prototypes   ************************ */
+
+#ifdef ASL110
 
 bool eepromAppInit(void);
 void SetDefaultValues(void);
@@ -106,6 +110,8 @@ uint8_t eeprom8bitGet(EepromItemId_t item_id);
 
 void eeprom16bitSet(EepromItemId_t item_id, uint16_t val);
 uint16_t eeprom16bitGet(EepromItemId_t item_id);
+
+#endif // #ifdef ASL110
 
 #endif // EEPROM_APP_H
 

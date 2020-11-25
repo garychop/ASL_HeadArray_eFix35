@@ -17,7 +17,8 @@
 
 // 0 is the highest priority, 255 is lowest and also the highest allowable value
 #define USER_BTN_MGMT_TASK_PRIO		(3)
-#define HEAD_ARR_MGMT_TASK_PRIO		(1)
+#define EFIX_COMM_TASK_PRIO 		(1)
+#define HEAD_ARR_MGMT_TASK_PRIO		(2)
 #define GEN_OUT_CTRL_MGMT_TASK_PRIO	(4)
 #define BEEPER_MGMT_TASK_PRIO		(5)
 #define HA_HHP_IF_MGMT_TASK_PRIO	(2)

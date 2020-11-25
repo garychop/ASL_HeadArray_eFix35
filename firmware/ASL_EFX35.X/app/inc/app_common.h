@@ -36,12 +36,13 @@
 
 typedef enum
 {
-	FUNC_FEATURE_POWER_ON_OFF,
+	//FUNC_FEATURE_POWER_ON_OFF,
+    FUNC_FEATURE_DRIVING,
 	FUNC_FEATURE_OUT_CTRL_TO_BT_MODULE,
-	FUNC_FEATURE_OUT_NEXT_FUNCTION,
-	FUNC_FEATURE_OUT_NEXT_PROFILE,
-	FUNC_FEATURE_RNET_SEATING,
-    FUNC_FEATURE2_RNET_SLEEP,
+	//FUNC_FEATURE_OUT_NEXT_FUNCTION,
+	//FUNC_FEATURE_OUT_NEXT_PROFILE,
+	//FUNC_FEATURE_RNET_SEATING,
+    //FUNC_FEATURE2_RNET_SLEEP,
 	// Nothing else may be defined past this point!
 	FUNC_FEATURE_EOL
 } FunctionalFeature_t;
@@ -51,7 +52,7 @@ typedef enum
 void AppCommonInit(void);
 bool appCommonFeatureIsEnabled(FunctionalFeature_t feature);
 bool appCommonSoundEnabled(void);
-bool appCommonIsPowerUpInIdleEnabled (void);
+//bool appCommonIsPowerUpInIdleEnabled (void);
 FunctionalFeature_t appCommonGetNextFeature(void);
 FunctionalFeature_t appCommonGetCurrentFeature(void);
 FunctionalFeature_t appCommonGetPreviousEnabledFeature(void);

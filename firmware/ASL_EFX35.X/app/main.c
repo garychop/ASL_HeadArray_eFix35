@@ -37,6 +37,8 @@
 #include "app_common.h"
 
 #include "beeper_bsp.h"
+#include "inc/eFix_Communication.h"
+
 // Useful, but need all the space we can get.
 #if 0
 static void TestSetup(void);
@@ -59,10 +61,15 @@ void main(void)
 	GenOutCtrlApp_Init();
 
 	// Other high level modules depend on EEPROM being initialized, therefore it must be initialized here.
+#ifdef ASL110
 	bool eeprom_initialized_before = eepromAppInit();
+#endif 
 	beeperInit();
 	userButtonInit();
 	headArrayinit();
+    
+    eFix_Communincation_Initialize();
+    
 //	haHhpApp_Init();
     
     // TODO:Take out
@@ -88,10 +95,10 @@ void main(void)
 #endif
 
 	// This must come after beeperInit() otherwise the pattern request will be ignored by the beeper module.
-	if (!eeprom_initialized_before)
-	{
-		(void)beeperBeep(BEEPER_PATTERN_EEPROM_NOT_INIT_ON_BOOT);
-	}
+//	if (!eeprom_initialized_before)
+//	{
+//		(void)beeperBeep(BEEPER_PATTERN_EEPROM_NOT_INIT_ON_BOOT);
+//	}
 
 	AppCommonInit();
 	
