@@ -42,43 +42,29 @@
 /* **************************   Local Macro Declarations   *************************** */
 
 #define EFIX_COMM_TASK_DELAY (15)
+#define DELAYS_BETWEEN_XMT_CHAR (2)
+
+#define ASL110_SOT (0xeb)       // Start Of Transmission Character
 
 /* **************************   Forward Declarations   *************************** */
 
 static void eFix_Communication_Task (void);
+static void Create_eFix_Setup_Msg(unsigned char *buffer);
+static void Create_eFix_MaxSpeed_Message(unsigned char *buffer);
+static void Create_eFix_Steering_Message (unsigned char *buffer, int direction);
+static void Create_eFix_Speed_Message(unsigned char *buffer, int speed);
+static void SendMessageToEFIX (unsigned char *buffer);
+
+// State Engine
+static void SendMaxSpeedMessage_State (void);
+static void SendSpeedDirection_State (void);
 
 /* **************************    Local Variables   *************************** */
 
-int g_Index = 0;
-unsigned char g_CharArray[0x100];
-
-
-//------------------------------------------------------------------------------
-// Function: eFix_Communincation_Initialize
-//
-// Description: Initialize the RS-232 Hardware and buffers.
-//
-//------------------------------------------------------------------------------
-
-void eFix_Communincation_Initialize(void)
-{
-    for (g_Index = 0; g_Index < sizeof(g_CharArray); ++g_Index)
-        g_CharArray[g_Index] = 0xff;
-    g_Index = 0;
-    
-    RS232_Initialize();     // Initialize the RS-232 PORT on the CPU.
-    
-    // Create the state update and control task
-    (void)task_create(eFix_Communication_Task, NULL, EFIX_COMM_TASK_PRIO, NULL, 0, 0);
-    
-}
-
-//------------------------------------------------------------------------------
-// Function: eFix_Communication_Task
-//
-// Description: This is the eFix Communication Task.
-//
-//------------------------------------------------------------------------------
+unsigned char g_XmtBuffer[8];
+void (*gpState)(void);
+int g_Direction;
+int g_Speed;
 
 int g_ReadyCounter = 0;
 int g_NotReadyCounter = 0;
@@ -90,59 +76,147 @@ char myChar = 0xff;
 char myBadChar = 0x41;
 unsigned char g_XmtChar = 0;
 
+
+//------------------------------------------------------------------------------
+// Function: eFix_Communincation_Initialize
+//
+// Description: Initialize the RS-232 Hardware and buffers.
+//
+//------------------------------------------------------------------------------
+
+void eFix_Communincation_Initialize(void)
+{
+    RS232_Initialize();     // Initialize the RS-232 PORT on the CPU.
+    
+    gpState = SendMaxSpeedMessage_State;
+    
+    // Create the state update and control task
+    (void)task_create(eFix_Communication_Task, NULL, EFIX_COMM_TASK_PRIO, NULL, 0, 0);
+    
+}
+
+//------------------------------------------------------------------------------
+
+static void SendMaxSpeedMessage_State (void) 
+{
+    Create_eFix_MaxSpeed_Message (g_XmtBuffer);
+    SendMessageToEFIX (g_XmtBuffer);
+
+    gpState = SendSpeedDirection_State;
+}
+
+//------------------------------------------------------------------------------
+
+static void SendSpeedDirection_State (void)
+{
+    Create_eFix_Steering_Message (g_XmtBuffer, g_Direction);
+    Create_eFix_Speed_Message (g_XmtBuffer, g_Speed);
+}
+
+//------------------------------------------------------------------------------
+// Function: eFix_Communication_Task
+//
+// Description: This is the eFix Communication Task.
+//
+//------------------------------------------------------------------------------
+
 static void eFix_Communication_Task (void)
 {
-    bool receivedChar;
-    int i;
-    
+   
     task_open();
 
     while (1)
 	{
         task_wait(MILLISECONDS_TO_TICKS(EFIX_COMM_TASK_DELAY));
         
+        gpState();
+        
+    }
+    
+    task_close();
+}
+
+//------------------------------------------------------------------------------
+// Send message this item in the buffer to the eFix controller via RS-232
+// Assumption is that the message is 6 character in length.
+//------------------------------------------------------------------------------
+static void SendMessageToEFIX (unsigned char *buffer)
+{
+    int i;
+
+    for (int counter = 0; counter < 6; ++counter)
+    {
+        for (i=0; i<20; ++i)    // A little pause between each character
+            NOP();
+        
         while (RS232_TransmitReady() == false)       // Wait for transmit buffer to be ready to accept new character
         {
             ; // ++g_NotReadyCounter;
         }
-        //TXREG = 0x55;
-        //g_XmtChar = 0x55;
-        RS232_TransmitChar(g_XmtChar);
-        g_CharArray[g_Index] = g_XmtChar;
-        if (++g_Index == sizeof (g_CharArray))
-            g_Index = 0;
-        
-        ++g_SendCounter;
-        
-        receivedChar = false;
-        i = 0;
-        while ((!receivedChar) && (i < 100))
-        {
-            ++i;
-            if (PIR1bits.RCIF != 0) // non0 = we got a character
-            {
-                receivedChar = true;
-//                if (RCSTAbits.OERR)
-//                {
-//                    CREN = 0;
-//                    NOP();
-//                    CREN = 1;
-//                }
-                myChar = RCREG;
-                if (myChar == g_XmtChar) // Did we get the right character
-                    ++g_Received55Counter;
-                else
-                {
-                    ++g_ReceivedCounter;
-                    myBadChar = myChar;
-                }
-            }
-        }
-        if (!receivedChar)          // Let's keep track of missed characters.
-            ++g_ReceiveTimeout;
-
-        ++g_XmtChar;
+        RS232_TransmitChar(buffer[counter]);
     }
-    
-    task_close();
+}
+//------------------------------------------------------------------------------
+// Function: CalcChecksum()
+// Description: This function calculates the checksum and puts in the 
+//      data to be sent to the eFix controller.
+//------------------------------------------------------------------------------
+void CalcChecksum(unsigned char *buffer)
+{
+    int checksum = 0;
+
+    for (int i = 0; i < 4; ++i)
+        checksum += buffer[i];
+    checksum = ~checksum;
+    checksum++;
+    buffer[4] = (unsigned char)(checksum >> 8);
+    buffer[5] = (unsigned char)(checksum & 0xff);
+}
+
+//------------------------------------------------------------------------------
+// This creates the 1st startup message.
+//------------------------------------------------------------------------------
+static void Create_eFix_Setup_Msg(unsigned char *buffer)
+{
+    buffer[0] = ASL110_SOT; // 0xEB;     // Start of Transmission (SOT)
+    buffer[1] = 0x04;     // Message ID
+    buffer[2] = 0x00;
+    buffer[3] = 0xd0; //  0xB0;
+    CalcChecksum (buffer);
+}
+
+//------------------------------------------------------------------------------
+// This creates the Maximum Speed message
+//------------------------------------------------------------------------------
+static void Create_eFix_MaxSpeed_Message(unsigned char *buffer)
+{
+    buffer[0] = ASL110_SOT;     // Start of Transmission (SOT)
+    buffer[1] = 0x08;     // Message ID
+    buffer[2] = 0x64;     // Only high byte
+    buffer[3] = 0x00;     // Only low byte
+    CalcChecksum(buffer);
+}
+
+//------------------------------------------------------------------------------
+// This creates the Direction (steering) message
+//------------------------------------------------------------------------------
+static void Create_eFix_Steering_Message (unsigned char *buffer, int direction)
+{
+    buffer[0] = ASL110_SOT;     // Start of Transmission (SOT)
+    buffer[1] = 0x01;     // Message ID
+    buffer[2] = (direction >> 8);    // Only high byte
+    buffer[3] = (direction & 0xff);  // Only low byte
+    CalcChecksum(buffer);
+}
+
+//------------------------------------------------------------------------------
+// This creates the Speed message
+//------------------------------------------------------------------------------
+static void Create_eFix_Speed_Message(unsigned char *buffer, int speed)
+{
+    buffer[0] = ASL110_SOT;     // Start of Transmission (SOT)
+    buffer[1] = 0x02;     // Message ID
+    buffer[2] = (speed >> 8);    // Only high byte
+    buffer[3] = (speed & 0xff);  // Only low byte
+    CalcChecksum(buffer);
 }

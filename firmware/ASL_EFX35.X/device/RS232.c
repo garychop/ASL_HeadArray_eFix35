@@ -57,7 +57,7 @@ void RS232_Initialize (void)
     BAUDCONbits.ABDOVF;     // This is a status bit, 0 = No BRG has occurred.
     BAUDCONbits.RCIDL;      // Status bit. 0 = Receive operation is active.
     BAUDCONbits.RXDTP = 0;  // "0" Indicates RX data is NOT inverted.
-    BAUDCONbits.TXCKP = 0;  // "0" Indicates TX data is NOT inverted.
+    BAUDCONbits.TXCKP = 1;  // "0" Indicates TX data is NOT inverted.
     BAUDCONbits.BRG16 = 1;  // "1" Indicates 16-Bit Baud Rate Generation, SPBRGH and SPBRG are used.
     BAUDCONbits.WUE = 0;    // "0" Wake up Not Enabled.
     BAUDCONbits.ABDEN = 0;  // "0" = Auto Baud Rate detection is disabled.
@@ -99,6 +99,22 @@ void RS232_TransmitChar (unsigned char item)
     TXREG = item;
 }
 
+//------------------------------------------------------------------------------
+// Function: RS232_GetReceivedChar
+// Description: Gets a character from the UART hardware.
+// Returns: true if a character is was received
+//          false if no character received.
+//------------------------------------------------------------------------------
+bool RS232_GetReceivedChar (unsigned char *item)
+{
+    if (PIR1bits.RCIF != 0) // non0 = we got a character
+    {
+        *item = RCREG;
+        return true;
+    }
+    *item = 0x00;
+    return false;
+}
 
 // END OF FILE
 

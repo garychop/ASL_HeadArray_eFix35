@@ -57,6 +57,13 @@ bool RS232_TransmitReady (void);
 //------------------------------------------------------------------------------
 void RS232_TransmitChar (unsigned char item);
 
+//------------------------------------------------------------------------------
+// Function: RS232_GetReceivedChar
+// Description: Gets a character from the UART hardware.
+// Returns: true if a character is was received
+//          false if no character received.
+//------------------------------------------------------------------------------
+bool RS232_GetReceivedChar (unsigned char *item);
 
 #endif	/* XC_HEADER_TEMPLATE_H */
 
