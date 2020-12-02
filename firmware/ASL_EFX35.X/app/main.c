@@ -35,7 +35,7 @@
 #include "general_output_ctrl_app.h"
 #include "ha_hhp_interface_app.h"
 #include "app_common.h"
-
+#include "MainState.h"
 #include "beeper_bsp.h"
 #include "inc/eFix_Communication.h"
 
@@ -43,8 +43,6 @@
 #if 0
 static void TestSetup(void);
 #endif
-
-/* *******************   Public Function Definitions   ******************** */
 
 //------------------------------
 // Function: main
@@ -69,6 +67,7 @@ void main(void)
 	headArrayinit();
     
     eFix_Communincation_Initialize();
+    //MainTaskInitialise();
     
 //	haHhpApp_Init();
     
@@ -122,6 +121,7 @@ static void TestSetup(void)
 //	eepromEnumSet(EEPROM_STORED_ITEM_CURRENT_ACTIVE_FEATURE, (EepromStoredEnumType_t)FUNC_FEATURE_POWER_ON_OFF);
 }
 #endif
+
 
 // end of file.
 //-------------------------------------------------------------------------

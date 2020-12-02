@@ -138,18 +138,15 @@ static volatile bool neutral_test_fail = false;
 /* ***********************   Function Prototypes   ************************ */
 
 static void HeadArrayInputControlTask(void);
-static void CheckInputs(void);
 static bool SetOutputs(void);
 
 static bool SendStateRequestToLedControlModule(void);
 //static void MirrorUpdateDigitalInputValues(void);
-static void UpdatePadStatus(void);
 //static void MirrorUpdateProportionalInputValues(void);
 static void MirrorDigitalInputOnBluetoothOutput(void);
 //static uint16_t ConvertPropInToOutValue(uint8_t sensor_id);
 
-static bool InNeutralState(void);
-static bool SyncWithEeprom(void);
+//static bool SyncWithEeprom(void);
 //static void RefreshLimits(void);
 
 #if defined(TEST_BASIC_DAC_CONTROL)
@@ -182,7 +179,7 @@ void headArrayinit(void)
 	bluetoothSimpleIfBspInit();
 	
 	// Fetch initial values from the EEPROM
-	(void)SyncWithEeprom();
+//	(void)SyncWithEeprom();
 
     (void)task_create(HeadArrayInputControlTask, NULL, HEAD_ARR_MGMT_TASK_PRIO, NULL, 0, 0);
 }
@@ -446,119 +443,50 @@ static void HeadArrayInputControlTask(void)
     
 	while (1)
 	{
-		CheckInputs();              // Read the Pad sensor into memory.
+        for (int sensor_id = 0; sensor_id < (int)HEAD_ARRAY_SENSOR_EOL; sensor_id++)
+        {
+            g_PadInfo[sensor_id].m_CurrentPadStatus = headArrayBspDigitalState((HeadArraySensor_t)sensor_id);
+        }
         
-//        myState();
+        // Prevent the Right and Left pads active at the same time.
+        // This is a safety feature.
+        if (g_PadInfo[HEAD_ARRAY_SENSOR_LEFT].m_CurrentPadStatus && g_PadInfo[HEAD_ARRAY_SENSOR_RIGHT].m_CurrentPadStatus)
+        {
+            g_PadInfo[HEAD_ARRAY_SENSOR_LEFT].m_CurrentPadStatus = false;
+            g_PadInfo[HEAD_ARRAY_SENSOR_RIGHT].m_CurrentPadStatus = false;
+        }
+        
+        // Turn on or off the Pad Sensor LED's
+        if (g_PadInfo[HEAD_ARRAY_SENSOR_CENTER].m_CurrentPadStatus != g_PadInfo[HEAD_ARRAY_SENSOR_CENTER].m_PreviousPadStatus)
+        {
+            if (g_PadInfo[HEAD_ARRAY_SENSOR_CENTER].m_CurrentPadStatus)
+                GenOutCtrlApp_SetStateAll(GEN_OUT_FORWARD_PAD_ACTIVE);
+            else
+                GenOutCtrlApp_SetStateAll(GEN_OUT_FORWARD_PAD_INACTIVE);
+            g_PadInfo[HEAD_ARRAY_SENSOR_CENTER].m_PreviousPadStatus = g_PadInfo[HEAD_ARRAY_SENSOR_CENTER].m_CurrentPadStatus;
+        }
 
-		if (g_WaitForNeutral)
-		{
-			if (!stopwatchIsActive(&neutral_sw))
-			{
-				stopwatchStart(&neutral_sw);
-				
-				// Shut down all outputs.
-				//dacBspSet(DAC_SELECT_FORWARD_BACKWARD, neutral_DAC_setting);
-				//dacBspSet(DAC_SELECT_LEFT_RIGHT, neutral_DAC_setting);
-				bluetoothSimpleIfBspPadMirrorDisable();
-			}
+        if (g_PadInfo[HEAD_ARRAY_SENSOR_LEFT].m_CurrentPadStatus != g_PadInfo[HEAD_ARRAY_SENSOR_LEFT].m_PreviousPadStatus)
+        {
+            if (g_PadInfo[HEAD_ARRAY_SENSOR_LEFT].m_CurrentPadStatus)
+                GenOutCtrlApp_SetStateAll(GEN_OUT_LEFT_PAD_ACTIVE);
+            else
+                GenOutCtrlApp_SetStateAll(GEN_OUT_LEFT_PAD_INACTIVE);
+            g_PadInfo[HEAD_ARRAY_SENSOR_LEFT].m_PreviousPadStatus = g_PadInfo[HEAD_ARRAY_SENSOR_LEFT].m_CurrentPadStatus;
+        }
 
-			// Need to wait for all pads to be inactive before controlling the wheelchair for safety reasons.
-			if (InNeutralState())
-			{
-				if (stopwatchTimeElapsed(&neutral_sw, false) >= NEUTRAL_STATE_MIN_TIME_TO_CHECK_ms)
-				{
-					stopwatchStop(&neutral_sw);
-					neutral_test_fail = false;
-                    g_WaitForNeutral = false;
-				}
-			}
-			else
-			{
-				stopwatchZero(&neutral_sw);
-				neutral_test_fail = true;
-			}
-		}
-		else
-		{
-			if (SyncWithEeprom())
-			{
-				event_signal(genOutCtrlAppWakeEvent());
-			}
-            
-                if (g_PadInfo[HEAD_ARRAY_SENSOR_CENTER].m_CurrentPadStatus != g_PadInfo[HEAD_ARRAY_SENSOR_CENTER].m_PreviousPadStatus)
-                {
-                    if (g_PadInfo[HEAD_ARRAY_SENSOR_CENTER].m_CurrentPadStatus)
-                        GenOutCtrlApp_SetStateAll(GEN_OUT_FORWARD_PAD_ACTIVE);
-                    else
-                        GenOutCtrlApp_SetStateAll(GEN_OUT_FORWARD_PAD_INACTIVE);
-                    g_PadInfo[HEAD_ARRAY_SENSOR_CENTER].m_PreviousPadStatus = g_PadInfo[HEAD_ARRAY_SENSOR_CENTER].m_CurrentPadStatus;
-                }
-            
-                if (g_PadInfo[HEAD_ARRAY_SENSOR_LEFT].m_CurrentPadStatus != g_PadInfo[HEAD_ARRAY_SENSOR_LEFT].m_PreviousPadStatus)
-                {
-                    if (g_PadInfo[HEAD_ARRAY_SENSOR_LEFT].m_CurrentPadStatus)
-                        GenOutCtrlApp_SetStateAll(GEN_OUT_LEFT_PAD_ACTIVE);
-                    else
-                        GenOutCtrlApp_SetStateAll(GEN_OUT_LEFT_PAD_INACTIVE);
-                    g_PadInfo[HEAD_ARRAY_SENSOR_LEFT].m_PreviousPadStatus = g_PadInfo[HEAD_ARRAY_SENSOR_LEFT].m_CurrentPadStatus;
-                }
-
-                if (g_PadInfo[HEAD_ARRAY_SENSOR_RIGHT].m_CurrentPadStatus != g_PadInfo[HEAD_ARRAY_SENSOR_RIGHT].m_PreviousPadStatus)
-                {
-                    if (g_PadInfo[HEAD_ARRAY_SENSOR_RIGHT].m_CurrentPadStatus)
-                        GenOutCtrlApp_SetStateAll(GEN_OUT_RIGHT_PAD_ACTIVE);
-                    else
-                        GenOutCtrlApp_SetStateAll(GEN_OUT_RIGHT_PAD_INACTIVE);
-                    g_PadInfo[HEAD_ARRAY_SENSOR_RIGHT].m_PreviousPadStatus = g_PadInfo[HEAD_ARRAY_SENSOR_RIGHT].m_CurrentPadStatus;
-                }
-//                            event_signal(genOutCtrlAppWakeEvent());
-//            case 1:
-//                GenOutCtrlApp_SetStateAll(GEN_OUT_REVERSE_PAD_INACTIVE);
-//                break;
-//            case 2:
-//                GenOutCtrlApp_SetStateAll(GEN_OUT_LEFT_PAD_INACTIVE);
-//                break;
-//            case 3:
-//                GenOutCtrlApp_SetStateAll(GEN_OUT_RIGHT_PAD_INACTIVE);
-//                break;
-
-			if (SetOutputs() && !outputs_are_off)
-			{
-				outputs_are_off = true;
-
-				// Shut down all outputs.
-				//dacBspSet(DAC_SELECT_FORWARD_BACKWARD, neutral_DAC_setting);
-				//dacBspSet(DAC_SELECT_LEFT_RIGHT, neutral_DAC_setting);
-				bluetoothSimpleIfBspPadMirrorDisable();
-			}
-			else if (outputs_are_off)
-			{
-				// We're back in an active output control state
-				outputs_are_off = false;
-			}
-		}
+        if (g_PadInfo[HEAD_ARRAY_SENSOR_RIGHT].m_CurrentPadStatus != g_PadInfo[HEAD_ARRAY_SENSOR_RIGHT].m_PreviousPadStatus)
+        {
+            if (g_PadInfo[HEAD_ARRAY_SENSOR_RIGHT].m_CurrentPadStatus)
+                GenOutCtrlApp_SetStateAll(GEN_OUT_RIGHT_PAD_ACTIVE);
+            else
+                GenOutCtrlApp_SetStateAll(GEN_OUT_RIGHT_PAD_INACTIVE);
+            g_PadInfo[HEAD_ARRAY_SENSOR_RIGHT].m_PreviousPadStatus = g_PadInfo[HEAD_ARRAY_SENSOR_RIGHT].m_CurrentPadStatus;
+        }
         
         task_wait(MILLISECONDS_TO_TICKS(20));
 	}
     task_close();
-}
-
-//-------------------------------
-// Function: CheckInputs
-//
-// Description: Checks the input values from the head array.
-//
-//-------------------------------
-static void CheckInputs(void)
-{
-#if defined(TEST_BASIC_DAC_CONTROL)
-	// Never returns.
-	TestBasicDacControl();  
-#endif
-
-	//MirrorUpdateProportionalInputValues();
-	//MirrorUpdateDigitalInputValues();
-    UpdatePadStatus();
 }
 
 //-------------------------------
@@ -654,70 +582,6 @@ static bool SendStateRequestToLedControlModule(void)
 	return genOutCtrlAppNeedSendEvent();
 }
 
-//-------------------------------
-// Function: MirrorUpdateDigitalInputValues
-//
-// Description: Update digital input values in RAM that communicate to the rest of the system what
-//		the value of each input is.
-//
-//-------------------------------
-//static void MirrorUpdateDigitalInputValues(void)
-//{
-//	for (int sensor_id = 0; sensor_id < (int)HEAD_ARRAY_SENSOR_EOL; sensor_id++)
-//	{
-//		pad_dig_state[sensor_id] = headArrayBspDigitalState((HeadArraySensor_t)sensor_id);
-//	}
-//}
-
-//-----------------------------------------------------------------------
-// This gets the Pad's Digital status and stores them in the global structure.
-//-----------------------------------------------------------------------
-//DEBUG int g_MyCount = 0;
-
-static void UpdatePadStatus (void)
-{
-	for (int sensor_id = 0; sensor_id < (int)HEAD_ARRAY_SENSOR_EOL; sensor_id++)
-	{
-		g_PadInfo[sensor_id].m_CurrentPadStatus = headArrayBspDigitalState((HeadArraySensor_t)sensor_id);
-//DEBUG        if (g_PadInfo[sensor_id].m_CurrentPadStatus)
-//DEBUG            ++g_MyCount;
-	}
-}
-//-------------------------------
-// Function: MirrorUpdateProportionalInputValues
-//
-// Description: Update proportional input values in RAM that communicate to the rest of the system what
-//		the value of each input is.
-//
-// NOTE: ADC reads 0x02 when a pad is connected, and 0x00 when disconnected.
-//		 It would be good to have a better distinction, but, well, there ya go.
-//
-//-------------------------------
-//static void MirrorUpdateProportionalInputValues(void)
-//{
-//	for (int sensor_id = 0; sensor_id < (int)HEAD_ARRAY_SENSOR_EOL; sensor_id++)
-//	{
-//		//pad_raw_prop_state[sensor_id] = headArrayBspAnalogState((HeadArraySensor_t)sensor_id);
-//
-//		// For safety, make sure that min/max thresholds make sense before using them to control the output value.
-//		if ((pad_raw_prop_state[sensor_id] < pad_adc_min_thresh_val[sensor_id]) ||
-//			(pad_adc_max_thresh_val[sensor_id] <= pad_adc_min_thresh_val[sensor_id]))
-//		{
-//			pad_prop_state[sensor_id] = 0;
-//		}
-//		else if (pad_raw_prop_state[sensor_id] > pad_adc_max_thresh_val[sensor_id])
-//		{
-//			pad_prop_state[sensor_id] = 100;
-//		}
-//		else
-//		{
-//			uint16_t range = pad_adc_max_thresh_val[sensor_id] - pad_adc_min_thresh_val[sensor_id];
-//
-//			// In between min and max limits
-//			pad_prop_state[sensor_id] = (uint16_t)(((uint32_t)100 * (uint32_t)(pad_raw_prop_state[sensor_id] - pad_adc_min_thresh_val[sensor_id])) / (uint32_t)range);
-//        }
-//	}
-//}
 
 //-------------------------------
 // Function: MirrorDigitalInputOnBluetoothOutput
@@ -755,14 +619,14 @@ static void MirrorDigitalInputOnBluetoothOutput(void)
 //}
 
 //-------------------------------
-// Function: InNeutralState
+// Function: PadsInNeutralState
 //
 // Description: Checks to see if the wheelchair is in a neutral wheelchair control state.
 //
 // NOTE: Must be called from a task/ISR.
 //
 //-------------------------------
-static bool InNeutralState(void)
+bool PadsInNeutralState(void)
 {
     bool active = true;
 	for (int i = 0; i < (int) HEAD_ARRAY_SENSOR_EOL; i++)
@@ -773,111 +637,6 @@ static bool InNeutralState(void)
     return active;
 }
 
-//-------------------------------
-// Function: SyncWithEeprom
-//
-// Description: Syncs all data that this module relies on that is stored in EEPROM with the EEPROM module.
-//
-// Return: Let's caller know whether or not the one and only event that can be sent needs to be sent.
-//
-// NOTE: Given that the task call rate is 20 ms and there are 7 items, in theory it will take a max of 140 ms for
-// NOTE: a piece of data to be updated.
-//
-//-------------------------------
-static bool SyncWithEeprom(void)
-{
-	uint16_t range;
-    bool need_to_send_event = false;
-	FunctionalFeature_t new_feature = FUNC_FEATURE_DRIVING;
-
-	if (curr_active_feature != new_feature)
-	{
-		curr_active_feature = new_feature;
-
-		if (curr_active_feature == FUNC_FEATURE_OUT_CTRL_TO_BT_MODULE)
-		{
-			// Shutdown output to control the system directly from this device
-			//dacBspSet(DAC_SELECT_FORWARD_BACKWARD, neutral_DAC_setting);
-			//dacBspSet(DAC_SELECT_LEFT_RIGHT, neutral_DAC_setting);
-		}
-		else
-		{
-			// Output to Bluetooth module is disabled.
-			bluetoothSimpleIfBspPadMirrorDisable();
-		}
-
-		need_to_send_event = SendStateRequestToLedControlModule();
-        
-        // Must wait for head array to be in a neutral state. when switching to a new active feature.
-        g_WaitForNeutral = true;
-	}
-
-//	head_arr_input_type[(int)HEAD_ARRAY_SENSOR_LEFT] = (HeadArrayInputType_t)eepromEnumGet(EEPROM_STORED_ITEM_LEFT_PAD_INPUT_TYPE);
-//	head_arr_input_type[(int)HEAD_ARRAY_SENSOR_RIGHT] = (HeadArrayInputType_t)eepromEnumGet(EEPROM_STORED_ITEM_RIGHT_PAD_INPUT_TYPE);
-//	head_arr_input_type[(int)HEAD_ARRAY_SENSOR_CENTER] = (HeadArrayInputType_t)eepromEnumGet(EEPROM_STORED_ITEM_CTR_PAD_INPUT_TYPE);
-
-//	input_pad_to_output_pad_map[(int)HEAD_ARRAY_SENSOR_LEFT] = (HeadArrayOutputFunction_t)eepromEnumGet(EEPROM_STORED_ITEM_LEFT_PAD_OUTPUT_MAP);
-//	input_pad_to_output_pad_map[(int)HEAD_ARRAY_SENSOR_RIGHT] = (HeadArrayOutputFunction_t)eepromEnumGet(EEPROM_STORED_ITEM_RIGHT_PAD_OUTPUT_MAP);
-//	input_pad_to_output_pad_map[(int)HEAD_ARRAY_SENSOR_CENTER] = (HeadArrayOutputFunction_t)eepromEnumGet(EEPROM_STORED_ITEM_CTR_PAD_OUTPUT_MAP);
-	
-//	pad_min_adc_val[(int)HEAD_ARRAY_SENSOR_LEFT] = eeprom16bitGet(EEPROM_STORED_ITEM_LEFT_PAD_MIN_ADC_VAL);
-//	pad_min_adc_val[(int)HEAD_ARRAY_SENSOR_RIGHT] = eeprom16bitGet(EEPROM_STORED_ITEM_RIGHT_PAD_MIN_ADC_VAL);
-//	pad_min_adc_val[(int)HEAD_ARRAY_SENSOR_CENTER] = eeprom16bitGet(EEPROM_STORED_ITEM_CTR_PAD_MIN_ADC_VAL);
-	
-//	pad_max_adc_val[(int)HEAD_ARRAY_SENSOR_LEFT] = eeprom16bitGet(EEPROM_STORED_ITEM_LEFT_PAD_MAX_ADC_VAL);
-//	pad_max_adc_val[(int)HEAD_ARRAY_SENSOR_RIGHT] = eeprom16bitGet(EEPROM_STORED_ITEM_RIGHT_PAD_MAX_ADC_VAL);
-//	pad_max_adc_val[(int)HEAD_ARRAY_SENSOR_CENTER] = eeprom16bitGet(EEPROM_STORED_ITEM_CTR_PAD_MAX_ADC_VAL);
-	
-//	pad_min_thresh_perc[(int)HEAD_ARRAY_SENSOR_LEFT] = eeprom16bitGet(EEPROM_STORED_ITEM_LEFT_PAD_MIN_THRESH_PERC);
-//	pad_min_thresh_perc[(int)HEAD_ARRAY_SENSOR_RIGHT] = eeprom16bitGet(EEPROM_STORED_ITEM_RIGHT_PAD_MIN_THRESH_PERC);
-//	pad_min_thresh_perc[(int)HEAD_ARRAY_SENSOR_CENTER] = eeprom16bitGet(EEPROM_STORED_ITEM_CTR_PAD_MIN_THRESH_PERC);
-	
-//	pad_max_thresh_perc[(int)HEAD_ARRAY_SENSOR_LEFT] = eeprom16bitGet(EEPROM_STORED_ITEM_LEFT_PAD_MAX_THRESH_PERC);
-//	pad_max_thresh_perc[(int)HEAD_ARRAY_SENSOR_RIGHT] = eeprom16bitGet(EEPROM_STORED_ITEM_RIGHT_PAD_MAX_THRESH_PERC);
-//	pad_max_thresh_perc[(int)HEAD_ARRAY_SENSOR_CENTER] = eeprom16bitGet(EEPROM_STORED_ITEM_CTR_PAD_MAX_THRESH_PERC);
-
-//    pad_MinDriveSpeed[(int)HEAD_ARRAY_SENSOR_CENTER] = (uint16_t) eeprom8bitGet(EEPROM_STORED_ITEM_MM_CENTER_PAD_MINIMUM_DRIVE_OFFSET);
-//    pad_MinDriveSpeed[(int)HEAD_ARRAY_SENSOR_LEFT] = (uint16_t) eeprom8bitGet(EEPROM_STORED_ITEM_MM_LEFT_PAD_MINIMUM_DRIVE_OFFSET);
-//    pad_MinDriveSpeed[(int)HEAD_ARRAY_SENSOR_RIGHT] = (uint16_t) eeprom8bitGet(EEPROM_STORED_ITEM_MM_RIGHT_PAD_MINIMUM_DRIVE_OFFSET);
-    
-//    neutral_DAC_counts = eeprom16bitGet(EEPROM_STORED_ITEM_MM_NEUTRAL_DAC_COUNTS);
-//    neutral_DAC_setting = eeprom16bitGet(EEPROM_STORED_ITEM_MM_NEUTRAL_DAC_SETTING);
-//    neutral_DAC_range = eeprom16bitGet(EEPROM_STORED_ITEM_MM_NEUTRAL_DAC_RANGE);
-
-//	for (int sensor_id = 0; sensor_id < HEAD_ARRAY_SENSOR_EOL; sensor_id++)
-//	{
-//		range = pad_max_adc_val[sensor_id] - pad_min_adc_val[sensor_id];
-//		pad_adc_min_thresh_val[sensor_id] = pad_min_adc_val[sensor_id] + (uint16_t)(((uint32_t)range * (uint32_t)pad_min_thresh_perc[sensor_id]) / (uint32_t)100);
-//		pad_adc_max_thresh_val[sensor_id] = pad_min_adc_val[sensor_id] + (uint16_t)(((uint32_t)range * (uint32_t)pad_max_thresh_perc[sensor_id]) / (uint32_t)100);
-//        DAC_Proportional_percent[sensor_id] = (neutral_DAC_range * (100 - pad_MinDriveSpeed[sensor_id])) / 100;
-//        DAC_Minimum_percent[sensor_id] = (neutral_DAC_range * pad_MinDriveSpeed[sensor_id]) / 100;
-//
-//	}
-	
-	// Need to make sure that the limits are set using the latest variables pulled from the EEPROM
-	// module from above.
-//	RefreshLimits();
-
-    return need_to_send_event;
-}
-
-//-------------------------------
-// Function: RefreshLimits
-//
-// Description: Set the DAC variables and constants
-//
-//-------------------------------
-//static void RefreshLimits(void)
-//{
-//    
-//	DAC_lower_rail = neutral_DAC_setting - neutral_DAC_range;
-//	DAC_upper_rail = neutral_DAC_setting + neutral_DAC_range;
-//
-//	DAC_max_forward_counts = DAC_upper_rail;
-//	DAC_max_left_counts = DAC_lower_rail;
-//	DAC_max_right_counts = DAC_upper_rail;
-//	DAC_max_reverse_counts = DAC_lower_rail;
-//}
 
 #if defined(TEST_BASIC_DAC_CONTROL)
 //-------------------------------

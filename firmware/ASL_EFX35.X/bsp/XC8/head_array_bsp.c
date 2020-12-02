@@ -63,10 +63,10 @@ bool headArrayBspDigitalState(HeadArraySensor_t sensor_id)
 		case HEAD_ARRAY_SENSOR_LEFT:
 			return (PORTBbits.RB1 == DIG_PAD_ACTIVE_STATE);
 
-		case HEAD_ARRAY_SENSOR_RIGHT:
+		case HEAD_ARRAY_SENSOR_CENTER:
 			return (PORTBbits.RB4 == DIG_PAD_ACTIVE_STATE);
 			
-		case HEAD_ARRAY_SENSOR_CENTER:
+		case HEAD_ARRAY_SENSOR_RIGHT:
 			return (PORTBbits.RB3 == DIG_PAD_ACTIVE_STATE);
 
         case HEAD_ARRAY_SENSOR_BACK:

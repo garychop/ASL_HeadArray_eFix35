@@ -46,9 +46,13 @@
 
 #define ASL110_SOT (0xeb)       // Start Of Transmission Character
 
+#define DIRECION_NEUTRAL (0x0)  // Neutral Direction Command
+#define SPEED_NEUTRAL (0x0)     // No Speed command
+
 /* **************************   Forward Declarations   *************************** */
 
 static void eFix_Communication_Task (void);
+void Create_NoCommand_Msg(unsigned char *buffer);
 static void Create_eFix_Setup_Msg(unsigned char *buffer);
 static void Create_eFix_MaxSpeed_Message(unsigned char *buffer);
 static void Create_eFix_Steering_Message (unsigned char *buffer, int direction);
@@ -57,7 +61,12 @@ static void SendMessageToEFIX (unsigned char *buffer);
 
 // State Engine
 static void SendMaxSpeedMessage_State (void);
-static void SendSpeedDirection_State (void);
+static void Send1st_NoCommandMessage_State (void);
+static void Send2nd_NoCommandMessage_State (void);
+static void SendSpeedAndDirection_State (void);
+static void SendSetupMessage_State (void);
+static void Send2nd_NoCommandMessage_State (void);
+static void Idle_State (void);
 
 /* **************************    Local Variables   *************************** */
 
@@ -86,31 +95,16 @@ unsigned char g_XmtChar = 0;
 
 void eFix_Communincation_Initialize(void)
 {
-    RS232_Initialize();     // Initialize the RS-232 PORT on the CPU.
+    RS232_Initialize();             // Initialize the RS-232 PORT on the CPU.
+    
+    g_Direction = DIRECION_NEUTRAL; // Preset to No Command
+    g_Speed = SPEED_NEUTRAL;        // Preset to No Speed
     
     gpState = SendMaxSpeedMessage_State;
     
     // Create the state update and control task
     (void)task_create(eFix_Communication_Task, NULL, EFIX_COMM_TASK_PRIO, NULL, 0, 0);
     
-}
-
-//------------------------------------------------------------------------------
-
-static void SendMaxSpeedMessage_State (void) 
-{
-    Create_eFix_MaxSpeed_Message (g_XmtBuffer);
-    SendMessageToEFIX (g_XmtBuffer);
-
-    gpState = SendSpeedDirection_State;
-}
-
-//------------------------------------------------------------------------------
-
-static void SendSpeedDirection_State (void)
-{
-    Create_eFix_Steering_Message (g_XmtBuffer, g_Direction);
-    Create_eFix_Speed_Message (g_XmtBuffer, g_Speed);
 }
 
 //------------------------------------------------------------------------------
@@ -137,8 +131,85 @@ static void eFix_Communication_Task (void)
 }
 
 //------------------------------------------------------------------------------
-// Send message this item in the buffer to the eFix controller via RS-232
-// Assumption is that the message is 6 character in length.
+// Function: IdleState
+// Description: Do nothing state. Essentially for debugging.
+//------------------------------------------------------------------------------
+int g_IdleStateCounter = 0;
+
+static void Idle_State (void)
+{
+    ++g_IdleStateCounter;
+}
+
+//------------------------------------------------------------------------------
+// Function: SendMaxSpeedMessage_State
+// Description: This state sends the Maximum Speed Message to the eFix system
+// and then sets the state to send a No Command Message
+//------------------------------------------------------------------------------
+static void SendMaxSpeedMessage_State (void) 
+{
+    Create_eFix_MaxSpeed_Message (g_XmtBuffer);
+    SendMessageToEFIX (g_XmtBuffer);
+    gpState = Send1st_NoCommandMessage_State;
+}
+
+//------------------------------------------------------------------------------
+// Function: 
+// Description: This is State executed within the State Engine. It sends a
+// No Command message to the eFix System and then sets the state to Send the Setup
+// message state.
+//------------------------------------------------------------------------------
+static void Send1st_NoCommandMessage_State (void)
+{
+    Create_NoCommand_Msg(g_XmtBuffer);
+    SendMessageToEFIX (g_XmtBuffer);
+    gpState = SendSetupMessage_State;
+}
+
+//------------------------------------------------------------------------------
+// Function: SendSetupMessage_State
+// Description: This state sends the Maximum Speed Message to the eFix system and then
+//      sets the state to send a No Command Message
+//------------------------------------------------------------------------------
+static void SendSetupMessage_State(void)
+{
+    Create_eFix_Setup_Msg(g_XmtBuffer);
+    SendMessageToEFIX (g_XmtBuffer);
+    gpState = Send2nd_NoCommandMessage_State;
+}
+
+//------------------------------------------------------------------------------
+// Function: SendMaxSpeedMessage_State
+// Description: This state sends the Maximum Speed Message to the eFix system
+// and then sets the state to send a No Command Message
+//------------------------------------------------------------------------------
+static void Send2nd_NoCommandMessage_State (void)
+{
+    Create_NoCommand_Msg(g_XmtBuffer);
+    SendMessageToEFIX (g_XmtBuffer);
+    gpState = SendSpeedAndDirection_State;
+}
+
+//------------------------------------------------------------------------------
+
+static void SendSpeedAndDirection_State (void)
+{
+    // Create the Direction Message, eFix refers to this as "Steering".
+    Create_eFix_Steering_Message (g_XmtBuffer, g_Direction);
+    SendMessageToEFIX (g_XmtBuffer);
+    // Create and send the speed message.
+    Create_eFix_Speed_Message (g_XmtBuffer, g_Speed);
+    SendMessageToEFIX (g_XmtBuffer);
+    
+    // TODO: Remove the following and allow the data to just repeatedly send
+    // the speed and direction commands.
+    gpState = Idle_State;
+}
+
+//------------------------------------------------------------------------------
+// Function: SendMessageToEFIX
+// Description: Send message this item in the buffer to the eFix controller via
+// RS-232.  Assumption is that the message is 6 character in length.
 //------------------------------------------------------------------------------
 static void SendMessageToEFIX (unsigned char *buffer)
 {
@@ -146,14 +217,20 @@ static void SendMessageToEFIX (unsigned char *buffer)
 
     for (int counter = 0; counter < 6; ++counter)
     {
-        for (i=0; i<20; ++i)    // A little pause between each character
-            NOP();
+//        for (i=0; i<20; ++i)    // A little pause between each character
+//            NOP();
         
         while (RS232_TransmitReady() == false)       // Wait for transmit buffer to be ready to accept new character
         {
             ; // ++g_NotReadyCounter;
         }
         RS232_TransmitChar(buffer[counter]);
+    }
+    // Wait until character is transmitted. Without this, the process is interrupted and
+    // the final character is not sent out.
+    while (RS232_TransmitReady() == false)       // Wait for transmit buffer to be ready to accept new character
+    {
+        ; // ++g_NotReadyCounter;
     }
 }
 //------------------------------------------------------------------------------
@@ -174,7 +251,19 @@ void CalcChecksum(unsigned char *buffer)
 }
 
 //------------------------------------------------------------------------------
-// This creates the 1st startup message.
+// This creates the blank, do nothing message.
+//------------------------------------------------------------------------------
+void Create_NoCommand_Msg(unsigned char *buffer)
+{
+    buffer[0] = ASL110_SOT;     // Start of Transmission (SOT)
+    buffer[1] = 0x04;     // Message ID
+    buffer[2] = 0x00;
+    buffer[3] = 0x00;
+    CalcChecksum(buffer);
+}
+
+//------------------------------------------------------------------------------
+// This creates the setup message.
 //------------------------------------------------------------------------------
 static void Create_eFix_Setup_Msg(unsigned char *buffer)
 {

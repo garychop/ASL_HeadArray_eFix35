@@ -57,12 +57,13 @@ typedef enum
 /* ***********************   Function Prototypes   ************************ */
 
 void headArrayinit(void);
+bool PadsInNeutralState(void);
 
 //uint16_t headArrayOutputValue(HeadArrayOutputAxis_t axis_id);
 uint16_t headArrayDigitalDacOutputValue(HeadArrayOutputAxis_t axis_id);
 uint16_t headArrayProportionalDacOutputValue(HeadArrayOutputAxis_t axis_id);
 
-bool headArrayDigitalInputValue(HeadArraySensor_t sensor);
+//bool headArrayDigitalInputValue(HeadArraySensor_t sensor);
 //uint16_t headArrayProportionalInputValueRaw(HeadArraySensor_t sensor);
 //uint16_t headArrayProportionalInputValue(HeadArraySensor_t sensor);
 

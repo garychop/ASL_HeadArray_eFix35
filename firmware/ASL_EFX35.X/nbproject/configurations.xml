@@ -16,6 +16,7 @@
         <itemPath>app/inc/ha_hhp_interface_app.h</itemPath>
         <itemPath>app/inc/rtos_task_priorities.h</itemPath>
         <itemPath>app/inc/eFix_Communication.h</itemPath>
+        <itemPath>app/inc/MainState.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f1" displayName="bsp" projectFiles="true">
         <itemPath>bsp/inc/beeper_bsp.h</itemPath>
@@ -86,6 +87,7 @@
         <itemPath>app/general_output_ctrl_app.c</itemPath>
         <itemPath>app/ha_hhp_interface_app.c</itemPath>
         <itemPath>app/eFix_Communication.c</itemPath>
+        <itemPath>app/MainState.c</itemPath>
       </logicalFolder>
       <logicalFolder name="XC8" displayName="bsp" projectFiles="true">
         <itemPath>bsp/XC8/beeper_bsp.c</itemPath>

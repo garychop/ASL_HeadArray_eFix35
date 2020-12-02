@@ -23,6 +23,7 @@
 #define BEEPER_MGMT_TASK_PRIO		(5)
 #define HA_HHP_IF_MGMT_TASK_PRIO	(2)
 #define SYSTEM_SUPERVISOR_TASK_PRIO	(0)
+#define MAIN_TASK_PRIO              (6)
 
 #endif // End of RTOS_TASK_PRIORITIES_H_
 
