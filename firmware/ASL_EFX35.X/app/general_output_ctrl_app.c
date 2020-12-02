@@ -446,6 +446,12 @@ static void ControlTask(void)
 static void AddStates(void)
 {
     // NOTE: The first entry is executed at Power Up. So it's the one to set the initial state of the item.
+    // Add state definitions for LED1, Forward Pad LED
+    if (!GenOutCtrl_AddState(GEN_OUT_CTRL_ID_POWER_LED, GEN_OUT_POWER_ON, true, 0, LED_Steady_On_StateDefinition))
+    {
+        ASSERT(false);
+    }
+
     
     // Add state definitions for LED1, Forward Pad LED
     if (!GenOutCtrl_AddState(GEN_OUT_CTRL_ID_FORWARD_PAD_LED, GEN_OUT_FORWARD_PAD_INACTIVE, true, 0, LED_Steady_Off_StateDefinition) ||

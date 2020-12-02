@@ -78,7 +78,7 @@ void main(void)
 	headArrayinit();
     
     eFix_Communincation_Initialize();
-    //MainTaskInitialise();
+    MainTaskInitialise();
     
 //	haHhpApp_Init();
 
