@@ -95,7 +95,7 @@ static void Driving_State (void);
 
 void MainTaskInitialise(void)
 {
-    MainState = Idle_State; // Startup_State;
+    MainState = Startup_State;
     g_StartupDelayCounter = 1000 / MAIN_TASK_DELAY;
     
     (void)task_create(MainTask , NULL, MAIN_TASK_PRIO, NULL, 0, 0);
@@ -130,36 +130,47 @@ static void Idle_State (void)
 
 //-------------------------------------------------------------------------
 // State: Startup_State
-//      Stay here until 500 milliseconds lapses then switch to OONAPU_State.
+// Description: Stay here until 500 milliseconds lapses then switch to OONAPU_State.
 //-------------------------------------------------------------------------
 static void Startup_State (void)
 {
     // If we need to startup differently, this is where you can do it.
-    MainState = OONAPU_State;       // Go check if any pads are active.
+    if (g_StartupDelayCounter > (500 / MAIN_TASK_DELAY))
+        g_StartupDelayCounter = (500 / MAIN_TASK_DELAY);
+
+    if (--g_StartupDelayCounter < 1) // Have we waited long enough.
+    {
+        g_StartupDelayCounter = (500 / MAIN_TASK_DELAY);
+        MainState = OONAPU_State;
+    }
 }
 
 //-------------------------------------------------------------------------
-// State: OONAPU_State
-//      Stay here until No Pads are active then change to Driving State
+// State: OONAPU_State (Out-Of-Neutral-At-Power-Up acronym)
+// Description: Stay here until No Pads are active then change to Driving State
 //-------------------------------------------------------------------------
 static void OONAPU_State (void)
 {
-    if (PadsInNeutralState())      // Nope we are not in neutral
+    if (PadsInNeutralState())      // Yep, we are in neutral
     {
-        // Guard against a painfully bug where we in Out-of-neutral state.
-        if (g_StartupDelayCounter > 500 / MAIN_TASK_DELAY)
-            g_StartupDelayCounter = 500 / MAIN_TASK_DELAY;
+        // Guard against a painfully long time out bug where we in Out-of-neutral state.
+        if (g_StartupDelayCounter > (500 / MAIN_TASK_DELAY))
+            g_StartupDelayCounter = (500 / MAIN_TASK_DELAY);
         
-        if (--g_StartupDelayCounter == 0) // Have we waited long enough.
+        if (--g_StartupDelayCounter < 1) // Have we waited long enough.
         {
             MainState = Driving_Setup_State;
         }
-    }    
+    }
+    else
+    {
+        g_StartupDelayCounter = (500 / MAIN_TASK_DELAY);  // reset the counter.
+    }
 }
 
 //-------------------------------------------------------------------------
 // State: Driving_Setup_State
-//      Stay here until User Port switch becomes inactive then
+// Description: Stay here until User Port switch becomes inactive then
 //          switch to Driving State.
 //-------------------------------------------------------------------------
 static void Driving_Setup_State (void)
@@ -169,14 +180,37 @@ static void Driving_Setup_State (void)
 
 //-------------------------------------------------------------------------
 // State: Driving_State
-//      Stay here while reading Pads and send pad info to eFix Task.
+// Description: 
+//      Stay here while reading Pads and sending pad info to eFix Task.
 //      If user port switch is active then
 //          - Send BT beeping sequence.
 //          - switch to Bluetooth Setup state.
 //-------------------------------------------------------------------------
 static void Driving_State (void)
 {
-    ++g_StartupDelayCounter; // just having it do something.
+    int speedPercentage = 0, directionPercentage = 0;
     
+    if (!PadsInNeutralState())      // Nope we are not in neutral
+    {
+        // Determine which is active and set the output accordingly.
+        // Note that the Left/Right override is performed at the lower level.
+        if (headArrayDigitalInputValue(HEAD_ARRAY_SENSOR_LEFT)) // Is Left pad active?
+        {
+            directionPercentage = -100;
+        }
+        else if (headArrayDigitalInputValue(HEAD_ARRAY_SENSOR_RIGHT)) // Is right pad active?
+        {
+            directionPercentage = 100;
+        }
+        else if (headArrayDigitalInputValue(HEAD_ARRAY_SENSOR_CENTER)) // Is center pad active?
+        {
+            speedPercentage = 100;
+        }
+        else if (headArrayDigitalInputValue(HEAD_ARRAY_SENSOR_BACK)) // Is 4th back pad active?
+        {
+            speedPercentage = -100;
+        }
+    }
+    SetSpeedAndDirection (speedPercentage, directionPercentage);
 }
 

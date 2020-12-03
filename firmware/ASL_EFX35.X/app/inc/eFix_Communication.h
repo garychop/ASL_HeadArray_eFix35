@@ -36,6 +36,7 @@
 
 void eFix_Communincation_Initialize(void);
 void RS232_TransmitChar (unsigned char item);
+void SetSpeedAndDirection (int speed, int direction);
 
 
 #endif	/* EFIX_COMMUNICATION_H */

@@ -217,11 +217,11 @@ void AppCommonForceActiveState (bool is_active)
 void AppCommonDeviceActiveSet(bool is_active)
 {
     // Determine if we need to check for Neutral.
-    if (device_is_active == false)      // We are NOT active
-    {
-        if (is_active)                  // We are going to ACTIVE
-            SetNeedForNeutralTest ();   // Tell the Head Array task to perform a Neutral Test
-    }
+//    if (device_is_active == false)      // We are NOT active
+//    {
+//        if (is_active)                  // We are going to ACTIVE
+//            SetNeedForNeutralTest ();   // Tell the Head Array task to perform a Neutral Test
+//    }
 	device_is_active = is_active;
 
 }

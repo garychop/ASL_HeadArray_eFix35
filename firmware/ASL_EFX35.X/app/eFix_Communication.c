@@ -46,8 +46,12 @@
 
 #define ASL110_SOT (0xeb)       // Start Of Transmission Character
 
-#define DIRECION_NEUTRAL (0x0)  // Neutral Direction Command
 #define SPEED_NEUTRAL (0x0)     // No Speed command
+#define SPEED_REVERSE (-950)
+#define SPEED_FORWARD (950)
+#define DIRECION_NEUTRAL (0x0)  // Neutral Direction Command
+#define DIRECTION_LEFT (-950)
+#define DIRECTION_RIGHT (950)
 
 /* **************************   Forward Declarations   *************************** */
 
@@ -85,6 +89,20 @@ char myChar = 0xff;
 char myBadChar = 0x41;
 unsigned char g_XmtChar = 0;
 
+//------------------------------------------------------------------------------
+// Function: SetSpeedAndDirection
+//
+// Description: This accepts speed and direction from...
+//      Speed is -100 (left), to 0 (neutral) to 100 (right)
+//      Direction is -100 (reverse), to 0 (neutral) to 100 (forward)
+//
+//------------------------------------------------------------------------------
+
+void SetSpeedAndDirection (int speedPercentage, int directionPercentage)
+{
+    g_Speed = speedPercentage * 9;            // Convert to -1000 to +1000
+    g_Direction = directionPercentage * 9;    // Convert to -1000 to +1000
+}
 
 //------------------------------------------------------------------------------
 // Function: eFix_Communincation_Initialize
@@ -194,16 +212,21 @@ static void Send2nd_NoCommandMessage_State (void)
 
 static void SendSpeedAndDirection_State (void)
 {
+    int i;
+
     // Create the Direction Message, eFix refers to this as "Steering".
     Create_eFix_Steering_Message (g_XmtBuffer, g_Direction);
     SendMessageToEFIX (g_XmtBuffer);
     // Create and send the speed message.
+    for (i=0; i<20; ++i)    // A little pause between each character
+        NOP();
+        
     Create_eFix_Speed_Message (g_XmtBuffer, g_Speed);
     SendMessageToEFIX (g_XmtBuffer);
     
     // TODO: Remove the following and allow the data to just repeatedly send
     // the speed and direction commands.
-    gpState = Idle_State;
+    //gpState = Idle_State;
 }
 
 //------------------------------------------------------------------------------
@@ -213,16 +236,11 @@ static void SendSpeedAndDirection_State (void)
 //------------------------------------------------------------------------------
 static void SendMessageToEFIX (unsigned char *buffer)
 {
-    int i;
-
     for (int counter = 0; counter < 6; ++counter)
     {
-//        for (i=0; i<20; ++i)    // A little pause between each character
-//            NOP();
-        
         while (RS232_TransmitReady() == false)       // Wait for transmit buffer to be ready to accept new character
         {
-            ; // ++g_NotReadyCounter;
+            ;
         }
         RS232_TransmitChar(buffer[counter]);
     }
@@ -230,7 +248,7 @@ static void SendMessageToEFIX (unsigned char *buffer)
     // the final character is not sent out.
     while (RS232_TransmitReady() == false)       // Wait for transmit buffer to be ready to accept new character
     {
-        ; // ++g_NotReadyCounter;
+        ;
     }
 }
 //------------------------------------------------------------------------------

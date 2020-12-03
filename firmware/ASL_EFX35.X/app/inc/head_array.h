@@ -63,14 +63,14 @@ bool PadsInNeutralState(void);
 uint16_t headArrayDigitalDacOutputValue(HeadArrayOutputAxis_t axis_id);
 uint16_t headArrayProportionalDacOutputValue(HeadArrayOutputAxis_t axis_id);
 
-//bool headArrayDigitalInputValue(HeadArraySensor_t sensor);
+bool headArrayDigitalInputValue(HeadArraySensor_t sensor);
 //uint16_t headArrayProportionalInputValueRaw(HeadArraySensor_t sensor);
 //uint16_t headArrayProportionalInputValue(HeadArraySensor_t sensor);
 
 bool headArrayPadIsConnected(HeadArraySensor_t sensor);
 
 bool headArrayNeutralTestFail(void);
-void SetNeedForNeutralTest (void);
+//void SetNeedForNeutralTest (void);
 
 #endif // HEAD_ARRAY_H
 

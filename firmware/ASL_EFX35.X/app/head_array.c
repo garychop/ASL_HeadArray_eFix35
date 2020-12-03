@@ -132,7 +132,7 @@ struct
 //	DAC_LEFT_DAC_VAL_MANIP_DIR, DAC_RIGHT_DAC_VAL_MANIP_DIR, DAC_FWD_DAC_VAL_MANIP_DIR, DAC_REV_DAC_VAL_MANIP_DIR
 //};
 
-static volatile bool g_WaitForNeutral = false;
+//static volatile bool g_WaitForNeutral = false;
 static volatile bool neutral_test_fail = false;
 
 /* ***********************   Function Prototypes   ************************ */
@@ -155,12 +155,12 @@ static void MirrorDigitalInputOnBluetoothOutput(void);
 
 /* *******************   Public Function Definitions   ******************** */
 
-//-------------------------------
+//------------------------------------------------------------------------------
 // Function: headArrayinit
 //
 // Description: Initializes this module.
 //
-//-------------------------------
+//------------------------------------------------------------------------------
 void headArrayinit(void)
 {
 	// Initialize other data
@@ -184,13 +184,13 @@ void headArrayinit(void)
     (void)task_create(HeadArrayInputControlTask, NULL, HEAD_ARR_MGMT_TASK_PRIO, NULL, 0, 0);
 }
 
-//-------------------------------
+//------------------------------------------------------------------------------
 // Function: headArrayOutputValue
 //
 // Description: Returns the value (digital or ADC value of proportional depending on setting) of a proportional sensor input from the last reading.
 //		For digital, the value will either be 0 or whatever the max ADC value is, depending on the active/inactive state.
 //
-//-------------------------------
+//------------------------------------------------------------------------------
 //uint16_t headArrayOutputValue(HeadArrayOutputAxis_t axis_id)
 //{
 //	int16_t out_val = neutral_DAC_setting;
@@ -331,7 +331,7 @@ void headArrayinit(void)
 //	return out_val;
 //}
 
-//-------------------------------
+//------------------------------------------------------------------------------
 // Function: headArrayDigitalInputValue
 //
 // Description: Returns the value of a digital sensor input from the last reading.
@@ -339,13 +339,13 @@ void headArrayinit(void)
 // NOTE: Do not use this for control or reporting related features that require taking into account
 // NOTE: input->output mapping.
 //
-//-------------------------------
+//------------------------------------------------------------------------------
 bool headArrayDigitalInputValue(HeadArraySensor_t sensor)
 {
 	return g_PadInfo[sensor].m_CurrentPadStatus;
 }
 
-//-------------------------------
+//------------------------------------------------------------------------------
 // Function: headArrayProportionalInputValueRaw
 //
 // Description: Returns the value of a raw proportional sensor input from the last reading.
@@ -353,13 +353,13 @@ bool headArrayDigitalInputValue(HeadArraySensor_t sensor)
 // NOTE: Do not use this for control or reporting related features that require taking into account
 // NOTE: input->output mapping.
 //
-//-------------------------------
+//------------------------------------------------------------------------------
 //uint16_t headArrayProportionalInputValueRaw(HeadArraySensor_t sensor)
 //{
 //	return pad_raw_prop_state[(int)sensor];
 //}
 
-//-------------------------------
+//------------------------------------------------------------------------------
 // Function: headArrayProportionalInputValue
 //
 // Description: Returns the value of a proportional sensor input from the last reading.
@@ -367,18 +367,18 @@ bool headArrayDigitalInputValue(HeadArraySensor_t sensor)
 // NOTE: Do not use this for control or reporting related features that require taking into account
 // NOTE: input->output mapping.
 //
-//-------------------------------
+//------------------------------------------------------------------------------
 //uint16_t headArrayProportionalInputValue(HeadArraySensor_t sensor)
 //{
 //	return pad_prop_state[(int)sensor];
 //}
 
-//-------------------------------
+//------------------------------------------------------------------------------
 // Function: headArrayPadIsConnected
 //
 // Description: Checks to see if a pad is connected.
 //
-//-------------------------------
+//------------------------------------------------------------------------------
 bool headArrayPadIsConnected(HeadArraySensor_t sensor)
 {
 	// NOTE: There's currently no way to tell if a pad is connected or not given hardware specs.
@@ -386,41 +386,36 @@ bool headArrayPadIsConnected(HeadArraySensor_t sensor)
 	return true;
 }
 
-//-------------------------------
+//------------------------------------------------------------------------------
 // Function: headArrayNeutralTestFail
 //
 // Description: Let's caller know whether or not the system is in a "neutral fail" state.
 //
-//-------------------------------
+//------------------------------------------------------------------------------
 bool headArrayNeutralTestFail(void)
 {
 	return neutral_test_fail;
 }
 
-//-------------------------------
+//------------------------------------------------------------------------------
 // Function: SetNeedForNeutralTest (void)
 //
 // Description: This sets a global flag that tells the Head Array Control task
 //      to perform a neutral test.
-//-------------------------------
-void SetNeedForNeutralTest (void)
-{
-	g_WaitForNeutral = true;
-}
+//------------------------------------------------------------------------------
+//void SetNeedForNeutralTest (void)
+//{
+////	g_WaitForNeutral = true;
+//}
 
 /* ********************   Private Function Definitions   ****************** */
-int myA = 0;
-void doThis(void)
-{
-    ++myA;
-}
 
-//-------------------------------
+//------------------------------------------------------------------------------
 // Function: HeadArrayInputControlTask
 //
 // Description: Does as the name suggests.
 //
-//-------------------------------
+//------------------------------------------------------------------------------
 static void HeadArrayInputControlTask(void)
 {
     task_open();
@@ -489,12 +484,12 @@ static void HeadArrayInputControlTask(void)
     task_close();
 }
 
-//-------------------------------
+//------------------------------------------------------------------------------
 // Function: SetOutputs
 //
 // Description: Sets outputs to their appropriate values, based on system state and input values.
 //
-//-------------------------------
+//------------------------------------------------------------------------------
 static bool SetOutputs(void)
 {
 	bool turn_outputs_off = true;
@@ -550,13 +545,13 @@ static bool SetOutputs(void)
 	return turn_outputs_off;
 }
 
-//-------------------------------
+//------------------------------------------------------------------------------
 // Function: SendStateRequestToLedControlModule
 //
 // Description: Determines what event needs to be sent to the LED state controller that reflects this
 //		module's state and sends it on over.
 //
-//-------------------------------
+//------------------------------------------------------------------------------
 static bool SendStateRequestToLedControlModule(void)
 {
 	GenOutState_t led_ctrl_state;
@@ -583,12 +578,12 @@ static bool SendStateRequestToLedControlModule(void)
 }
 
 
-//-------------------------------
+//------------------------------------------------------------------------------
 // Function: MirrorDigitalInputOnBluetoothOutput
 //
 // Description: Mirrors digital pad inputs on Bluetooth digital output lines. No mapping, just a one-to-one map.
 //
-//-------------------------------
+//------------------------------------------------------------------------------
 static void MirrorDigitalInputOnBluetoothOutput(void)
 {
 	for (int i = 0; i < (int) HEAD_ARRAY_SENSOR_EOL; i++)
@@ -598,12 +593,12 @@ static void MirrorDigitalInputOnBluetoothOutput(void)
 	}
 }
 
-//-------------------------------
+//------------------------------------------------------------------------------
 // Function: ConvertPropInToOutValue
 //
 // Description: Converts input proportional value to DAC output value.
 //
-//-------------------------------
+//------------------------------------------------------------------------------
 //static uint16_t ConvertPropInToOutValue(uint8_t sensor_id)
 //{
 //	uint16_t ret_val;
@@ -618,33 +613,34 @@ static void MirrorDigitalInputOnBluetoothOutput(void)
 //	return ret_val;
 //}
 
-//-------------------------------
+//------------------------------------------------------------------------------
 // Function: PadsInNeutralState
 //
 // Description: Checks to see if the wheelchair is in a neutral wheelchair control state.
 //
 // NOTE: Must be called from a task/ISR.
 //
-//-------------------------------
+//------------------------------------------------------------------------------
 bool PadsInNeutralState(void)
 {
     bool active = true;
 	for (int i = 0; i < (int) HEAD_ARRAY_SENSOR_EOL; i++)
 	{
-        if (!g_PadInfo[i].m_CurrentPadStatus)
-            active = false;
+        if (g_PadInfo[i].m_CurrentPadStatus)    // non-zero is active
+            active = false;                 // Indicate that it's not in neutral
 	}
     return active;
 }
 
 
+
 #if defined(TEST_BASIC_DAC_CONTROL)
-//-------------------------------
+//------------------------------------------------------------------------------
 // Function: TestBasicDacControl
 //
 // Description: Makes sure that we are able to properly set the DAC output values.
 //
-//-------------------------------
+//------------------------------------------------------------------------------
 static void TestBasicDacControl(void)
 {
 	#define NUM_DAC_STEPS ((uint16_t)10)
