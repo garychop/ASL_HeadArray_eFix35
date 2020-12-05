@@ -60,7 +60,6 @@ typedef enum BUTTUN_STATE_ENUM
 
 /* ***********************   File Scope Variables   *********************** */
 
-static volatile UserButtonPress_t curr_thresh_hit;
 BUTTUN_STATE_E g_ButtonState = 0;
 uint8_t g_ButtonPattern = 0;
 
@@ -116,8 +115,7 @@ void userButtonInit(void)
     }
 
     
-	curr_thresh_hit = USER_BTN_PRESS_NONE;
-    data_lock_mutex = sem_bin_create(1); // Set up so the first task to try and take the semaphore succeeds
+	data_lock_mutex = sem_bin_create(1); // Set up so the first task to try and take the semaphore succeeds
 	
     // People were indicating that the switch response is sluggish. I reduced the time from 100 to 50 and
     // it is much more responsive and still provides sufficient debounce time.
@@ -158,7 +156,7 @@ uint8_t GetSwitchStatus(void)
 
 bool IsBeepEnabled(void)
 {
-    return false;
+    return true;
 }
 
 //-------------------------------
@@ -218,6 +216,7 @@ static void UserButtonMonitorTask (void)
                     // Beep that the button was pushed.
                     if (currentButtonPattern & USER_SWITCH)
                     {
+// Use this code if you want to annunciate a button push here.                        
                         event_to_send_beeper_task = beeperBeep(BEEPER_PATTERN_USER_BUTTON_SHORT_PRESS);
                         if (event_to_send_beeper_task != NO_EVENT)
                         {
@@ -274,8 +273,8 @@ static void UserButtonMonitorTask (void)
             }
             else // button was released.
             {
-                CarryOutShortPressAction();
-                event_signal(genOutCtrlAppWakeEvent());
+                //CarryOutShortPressAction();
+                //event_signal(genOutCtrlAppWakeEvent());
                 g_ButtonState = WAIT_FOR_NO_SWITCHES;
             }
         }
@@ -330,7 +329,6 @@ static void UserButtonMonitorTask (void)
 //-------------------------------
 static void ResetButtonMonitoring(void)
 {
-	curr_thresh_hit = USER_BTN_PRESS_NONE;
 	hold_off_monitoring = true;
 	stopwatchZero(&btn_mon_stopwatch);
 }

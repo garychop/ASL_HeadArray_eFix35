@@ -143,7 +143,6 @@ static bool SetOutputs(void);
 static bool SendStateRequestToLedControlModule(void);
 //static void MirrorUpdateDigitalInputValues(void);
 //static void MirrorUpdateProportionalInputValues(void);
-static void MirrorDigitalInputOnBluetoothOutput(void);
 //static uint16_t ConvertPropInToOutValue(uint8_t sensor_id);
 
 //static bool SyncWithEeprom(void);
@@ -518,7 +517,7 @@ static bool SetOutputs(void)
                     
 				case FUNC_FEATURE_OUT_CTRL_TO_BT_MODULE:
 					// Control sent to a Bluetooth module.
-					MirrorDigitalInputOnBluetoothOutput();
+					//MirrorDigitalInputOnBluetoothOutput();
 					turn_outputs_off = false;
 					break;
 				
@@ -577,21 +576,6 @@ static bool SendStateRequestToLedControlModule(void)
 	return genOutCtrlAppNeedSendEvent();
 }
 
-
-//------------------------------------------------------------------------------
-// Function: MirrorDigitalInputOnBluetoothOutput
-//
-// Description: Mirrors digital pad inputs on Bluetooth digital output lines. No mapping, just a one-to-one map.
-//
-//------------------------------------------------------------------------------
-static void MirrorDigitalInputOnBluetoothOutput(void)
-{
-	for (int i = 0; i < (int) HEAD_ARRAY_SENSOR_EOL; i++)
-	{
-		//bluetoothSimpleIfBspPadMirrorStateSet((HeadArraySensor_t)i, pad_dig_state[i]);
-		bluetoothSimpleIfBspPadMirrorStateSet((HeadArraySensor_t)i, g_PadInfo[i].m_CurrentPadStatus);
-	}
-}
 
 //------------------------------------------------------------------------------
 // Function: ConvertPropInToOutValue

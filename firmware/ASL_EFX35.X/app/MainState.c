@@ -23,26 +23,29 @@
 // NOTE: This must ALWAYS be the first include in a file.
 #include "device.h"
 
+// from RTOS
+#include "cocoos.h"
+
 // from stdlib
 #include <stdint.h>
 #include <stdbool.h>
 #include "user_assert.h"
 
-// from RTOS
-#include "cocoos.h"
-
 // from project
+//#include "common.h"
 #include "bsp.h"
 #include "test_gpio.h"
 #include "eeprom_app.h"
 #include "head_array.h"
 #include "beeper.h"
+#include "user_button_bsp.h"
 #include "user_button.h"
 #include "general_output_ctrl_app.h"
 #include "ha_hhp_interface_app.h"
 #include "app_common.h"
 
 #include "beeper_bsp.h"
+#include "bluetooth_simple_if_bsp.h"
 #include "inc/eFix_Communication.h"
 #include "inc/rtos_task_priorities.h"
 
@@ -58,6 +61,9 @@
 
 static void (*MainState)(void);
 static int g_StartupDelayCounter;
+static int g_SwitchDelay;
+static uint8_t g_ExeternalSwitchStatus;
+static BeepPattern_t g_BeepPattern = BEEPER_PATTERN_EOL;
 
 //------------------------------------------------------------------------------
 // Forward Declarations
@@ -65,6 +71,7 @@ static int g_StartupDelayCounter;
 
 static void MainTaskInitialise(void);
 static void MainTask (void);
+static void MirrorDigitalInputOnBluetoothOutput(void);
 
 // The following are the states
 static void Idle_State (void);
@@ -75,8 +82,10 @@ static void Startup_State (void);
 
 // State: OONAPU_State
 //      Stay here until No Pads are active then change to Driving State
+static void OONAPU_Setup_State (void);
 static void OONAPU_State (void);
 
+static void Annunciate_DrivingReady_State (void);
 // State: Driving_Setup_State
 //      Stay here until User Port switch becomes inactive then
 //          switch to Driving State.
@@ -88,6 +97,21 @@ static void Driving_Setup_State (void);
 //          - Send BT beeping sequence.
 //          - switch to Bluetooth Setup state.
 static void Driving_State (void);
+//static void Driving_UserSwitchActivated (void);
+static void Driving_UserSwitch_State (void);
+static void Driving_Idle_State (void);
+
+// State: BluetoothSetup_State
+//      Stay here and user port switch becomes inactive then
+//          - Switch to DoBluetooth_State
+static void BluetoothSetup_State (void);
+
+// State: DoBluetooth_State
+//      Stay here and send active pad info to Bluetooth module.
+//      If user port switch is active then
+//          - Beep to annunciate driving.
+//          - Switch to Driving_Setup_State
+static void DoBluetooth_State (void);
 
 //-------------------------------------------------------------------------
 // Main task
@@ -95,9 +119,11 @@ static void Driving_State (void);
 
 void MainTaskInitialise(void)
 {
-    MainState = Startup_State;
+    g_BeepPattern = BEEPER_PATTERN_EOL;
     g_StartupDelayCounter = 1000 / MAIN_TASK_DELAY;
     
+    MainState = Startup_State;
+
     (void)task_create(MainTask , NULL, MAIN_TASK_PRIO, NULL, 0, 0);
 }
 
@@ -108,15 +134,28 @@ void MainTaskInitialise(void)
 
 static void MainTask (void)
 {
+    Evt_t event_to_send_beeper_task;
    
     task_open();
 
     while (1)
 	{
+        // Get the User and Mode port switch status all of the time.
+        g_ExeternalSwitchStatus = GetSwitchStatus();
+        
         MainState();
 
         task_wait(MILLISECONDS_TO_TICKS(MAIN_TASK_DELAY));
 
+        if (g_BeepPattern != BEEPER_PATTERN_EOL)
+        {
+            event_to_send_beeper_task = beeperBeep(g_BeepPattern);
+            if (event_to_send_beeper_task != NO_EVENT)
+            {
+                event_signal(event_to_send_beeper_task);
+            }
+            g_BeepPattern = BEEPER_PATTERN_EOL;
+         }
     }
     
     task_close();
@@ -145,6 +184,13 @@ static void Startup_State (void)
     }
 }
 
+static void OONAPU_Setup_State (void)
+{
+    g_StartupDelayCounter = (500 / MAIN_TASK_DELAY);
+    
+    MainState = OONAPU_State;
+    
+}
 //-------------------------------------------------------------------------
 // State: OONAPU_State (Out-Of-Neutral-At-Power-Up acronym)
 // Description: Stay here until No Pads are active then change to Driving State
@@ -159,13 +205,18 @@ static void OONAPU_State (void)
         
         if (--g_StartupDelayCounter < 1) // Have we waited long enough.
         {
-            MainState = Driving_Setup_State;
+            MainState = Annunciate_DrivingReady_State;
         }
     }
     else
     {
         g_StartupDelayCounter = (500 / MAIN_TASK_DELAY);  // reset the counter.
     }
+}
+
+static void Annunciate_DrivingReady_State (void)
+{
+    MainState = Driving_Setup_State;
 }
 
 //-------------------------------------------------------------------------
@@ -175,7 +226,14 @@ static void OONAPU_State (void)
 //-------------------------------------------------------------------------
 static void Driving_Setup_State (void)
 {
-    MainState = Driving_State;
+    // Check the user port for go inactive.
+    // When it does, go to the Driving State.
+    if ((g_ExeternalSwitchStatus & USER_SWITCH) == false)
+    {
+         g_BeepPattern = ANNOUNCE_POWER_ON;
+        // Set to Blue tooth state
+        MainState = Driving_State;
+    }
 }
 
 //-------------------------------------------------------------------------
@@ -189,7 +247,7 @@ static void Driving_Setup_State (void)
 static void Driving_State (void)
 {
     int speedPercentage = 0, directionPercentage = 0;
-    
+
     if (!PadsInNeutralState())      // Nope we are not in neutral
     {
         // Determine which is active and set the output accordingly.
@@ -212,5 +270,117 @@ static void Driving_State (void)
         }
     }
     SetSpeedAndDirection (speedPercentage, directionPercentage);
+    
+    // Check the user port for active... If so, change to Bluetooth state.
+    if (g_ExeternalSwitchStatus & USER_SWITCH)
+    {
+        SetSpeedAndDirection (0, 0);
+        
+        g_SwitchDelay = 3000 / MAIN_TASK_DELAY;
+        
+        MainState = Driving_UserSwitch_State;
+    }
 }
+
+//-------------------------------------------------------------------------
+//static void Driving_UserSwitchActivated (void)
+//{
+//    g_SwitchDelay = 3000 / MAIN_TASK_DELAY;
+//    
+//    MainState = Driving_UserSwitch_State;
+//}
+
+//-------------------------------------------------------------------------
+static void Driving_UserSwitch_State(void)
+{
+    if (g_ExeternalSwitchStatus & USER_SWITCH)
+    {
+        if (g_SwitchDelay != 0)      // Sanity check.
+        {
+            --g_SwitchDelay;
+        }
+        // Did we wait long enough to switch to Bluetooth
+        if (g_SwitchDelay == 0)
+        {
+            g_BeepPattern = ANNOUNCE_BLUETOOTH;
+            MainState = BluetoothSetup_State;
+        }
+    }
+    else
+    {
+        MainState = Driving_Idle_State;
+    }
+}
+
+//-------------------------------------------------------------------------
+// State: Driving_Idle_State
+//      Remain here until the User Switch goes active then we are going
+//      enable driving, but first, we are doing a OON test.
+//-------------------------------------------------------------------------
+static void Driving_Idle_State (void)
+{
+    if (g_ExeternalSwitchStatus & USER_SWITCH)
+    {
+        MainState = OONAPU_Setup_State;
+    }
+}
+
+//-------------------------------------------------------------------------
+// State: BluetoothSetup_State
+//      Remain here until the User Switch goes inactive.
+//          - Beep to annunciate driving.
+//          - Switch to Driving_Setup_State
+//-------------------------------------------------------------------------
+static void BluetoothSetup_State (void)
+{
+    
+    // Check the user port for go inactive.
+    // If so, change to doing the Bluetooth state
+    if ((g_ExeternalSwitchStatus & USER_SWITCH) == false)
+    {
+        
+        // Set to Blue tooth state
+        MainState = DoBluetooth_State;
+    }
+}
+
+//-------------------------------------------------------------------------
+// State: DoBluetooth
+//      Stay here and send active pad info to Bluetooth module.
+//      If user port switch is active then
+//          - Beep to annunciate driving.
+//          - Switch to Driving_Setup_State
+//-------------------------------------------------------------------------
+static void DoBluetooth_State (void)
+{
+    
+    // Check the user port for active... If so, change to Setting up the
+    // driving state.
+    if (g_ExeternalSwitchStatus & USER_SWITCH)
+    {
+        
+        // Set to Blue tooth state
+        g_StartupDelayCounter = (500 / MAIN_TASK_DELAY);
+        MainState = OONAPU_Setup_State;
+    }
+
+    MirrorDigitalInputOnBluetoothOutput();
+
+}
+
+//------------------------------------------------------------------------------
+// Function: MirrorDigitalInputOnBluetoothOutput
+//
+// Description: Mirrors digital pad inputs on Bluetooth digital output lines. No mapping, just a one-to-one map.
+//
+//------------------------------------------------------------------------------
+static void MirrorDigitalInputOnBluetoothOutput(void)
+{
+	for (int i = 0; i < (int) HEAD_ARRAY_SENSOR_EOL; i++)
+	{
+		bluetoothSimpleIfBspPadMirrorStateSet((HeadArraySensor_t)i, headArrayDigitalInputValue(i));
+	}
+}
+
+
 
