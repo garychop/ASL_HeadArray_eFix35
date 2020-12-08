@@ -46,6 +46,8 @@ typedef struct
 } Beep_t;
 
 /* ***********************   File Scope Variables   *********************** */
+//uint8_t g_BeeperTaskID;
+//static BeepMsg_t g_BeepMsgPool[BEEP_POOL_SIZE];
 
 static uint8_t blocking_task_id;
 static volatile BeepPattern_t session_pattern;
@@ -265,11 +267,13 @@ Evt_t BeeperWaitUntilPatternCompletes(void)
 //-------------------------------
 static void BeepPatternTask(void)
 {
+    BeepMsg_t myBeepMsg;
+    
     task_open();
 
 	uint32_t wait_time_ms = MILLISECONDS_TO_TICKS(25);
 
-	// Someone desires a beep sequence on boot.  So, we shall go ahead and carry out the sequence.
+    // Someone desires a beep sequence on boot.  So, we shall go ahead and carry out the sequence.
 	if (session_pattern != BEEPER_PATTERN_EOL)
 	{
 		StartBeepPattern();

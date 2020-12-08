@@ -44,7 +44,7 @@
 #include "ha_hhp_interface_app.h"
 #include "app_common.h"
 
-#include "beeper_bsp.h"
+//#include "beeper_bsp.h"
 #include "bluetooth_simple_if_bsp.h"
 #include "inc/eFix_Communication.h"
 #include "inc/rtos_task_priorities.h"
@@ -64,10 +64,16 @@ static int g_StartupDelayCounter;
 static int g_SwitchDelay;
 static uint8_t g_ExeternalSwitchStatus;
 static BeepPattern_t g_BeepPattern = BEEPER_PATTERN_EOL;
+uint8_t g_MainTaskID = 0;
+
+uint8_t g_BeeperTaskID;
+//static BeepMsg_t g_BeepMsgPool[BEEP_POOL_SIZE];
+static Msg_t g_BeepMsgPool[BEEP_POOL_SIZE];
 
 //------------------------------------------------------------------------------
 // Forward Declarations
 //------------------------------------------------------------------------------
+static void NewTask (void);
 
 static void MainTaskInitialise(void);
 static void MainTask (void);
@@ -134,17 +140,41 @@ void MainTaskInitialise(void)
     
     MainState = Startup_State;
 
-    (void)task_create(MainTask , NULL, MAIN_TASK_PRIO, NULL, 0, 0);
+    g_MainTaskID = task_create(MainTask , NULL, MAIN_TASK_PRIO, NULL, 0, 0);
+
+    g_BeeperTaskID = task_create(NewTask, NULL, BEEPER_MGMT_TASK_PRIO+10, (Msg_t*)g_BeepMsgPool, BEEP_POOL_SIZE, sizeof (BeepMsg_t));
+
 }
 
 //-------------------------------------------------------------------------
 // Function: MainTask
 // Description: This is the main task that controls everything.
 //-------------------------------------------------------------------------
+int IGotAMsg = 0;
+
+static void NewTask (void)
+{
+    Msg_t newTaskBeepMsg;
+
+    task_open();
+
+    while (1)
+    {
+        msg_receive_async (g_BeeperTaskID, &newTaskBeepMsg);
+        if (newTaskBeepMsg.signal != NO_MSG_ID)
+        {
+            ++IGotAMsg;
+        }
+        task_wait(MILLISECONDS_TO_TICKS(100));
+    }
+    
+    task_close();
+}
 
 static void MainTask (void)
 {
     Evt_t event_to_send_beeper_task;
+    static Msg_t myBeepMsg;
    
     task_open();
 
@@ -159,11 +189,14 @@ static void MainTask (void)
 
         if (g_BeepPattern != BEEPER_PATTERN_EOL)
         {
-            event_to_send_beeper_task = beeperBeep(g_BeepPattern);
-            if (event_to_send_beeper_task != NO_EVENT)
-            {
-                event_signal(event_to_send_beeper_task);
-            }
+            myBeepMsg.signal = g_BeepPattern;
+            msg_post (g_BeeperTaskID, myBeepMsg);
+            
+//            event_to_send_beeper_task = beeperBeep(g_BeepPattern);
+//            if (event_to_send_beeper_task != NO_EVENT)
+//            {
+//                event_signal(event_to_send_beeper_task);
+//            }
             g_BeepPattern = BEEPER_PATTERN_EOL;
          }
     }
@@ -240,7 +273,7 @@ static void Driving_Setup_State (void)
     // When it does, go to the Driving State.
     if ((g_ExeternalSwitchStatus & USER_SWITCH) == false)
     {
-         g_BeepPattern = ANNOUNCE_POWER_ON;
+         g_BeepPattern = ANNOUNCE_NEXT_FUNCTION; // ANNOUNCE_POWER_ON;
         // Set to Blue tooth state
         MainState = Driving_State;
     }

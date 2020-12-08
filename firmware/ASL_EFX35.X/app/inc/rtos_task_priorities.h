@@ -16,6 +16,7 @@
 /* ******************************   Macros   ****************************** */
 
 // 0 is the highest priority, 255 is lowest and also the highest allowable value
+// NOTE: They must be unique
 #define USER_BTN_MGMT_TASK_PRIO		(3)
 #define EFIX_COMM_TASK_PRIO 		(1)
 #define HEAD_ARR_MGMT_TASK_PRIO		(2)
