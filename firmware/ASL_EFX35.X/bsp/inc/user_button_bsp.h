@@ -22,7 +22,7 @@
 
 void ButtonBspInit(void);
 bool userButtonBspIsActive(void);
-//bool ModeButtonBspIsActive(void);
+bool ModeButtonBspIsActive(void);
 
 #endif // USER_BUTTON_BSP_H
 

@@ -139,24 +139,13 @@ uint8_t GetSwitchStatus(void)
 {
     uint8_t mySwitches = 0;
     
-    if (userButtonBspIsActive())
-        mySwitches |= USER_SWITCH;
-//    if (ModeButtonBspIsActive())
+//    if (userButtonBspIsActive())
+//        mySwitches |= USER_SWITCH;
+    if (ModeButtonBspIsActive())
 //        mySwitches |= MODE_SWITCH;
+        mySwitches |= USER_SWITCH;
     
     return mySwitches;
-}
-
-//-------------------------------
-// Function: IsBeepEnabled
-// Description: Get the status of the DIP switch for the Beep
-// Returns: "true" if the Beeps should be making obnoxious noise or
-//      "false" to operate in silence.
-//-------------------------------
-
-bool IsBeepEnabled(void)
-{
-    return true;
 }
 
 //-------------------------------

@@ -28,19 +28,24 @@
 
 /* ******************************   Macros   ****************************** */
 
-#define USER_BTN_IS_ACTIVE()	(PORTBbits.RB0 == GPIO_LOW)
+// B0 is RESET on Schematic
+// D2 is 3/4_SW on schematic which is Switch #1 on DIP switch
+// B7 is 
+
+//#define USER_BTN_IS_ACTIVE()	(PORTBbits.RB0 == GPIO_LOW)
+
 void USER_BTN_INIT()
 {
-    TRISBbits.TRISB0 = GPIO_BIT_INPUT;
+//    TRISBbits.TRISB0 = GPIO_BIT_INPUT;  // This must be 
     //ANSELBbits.ANSELB1 = 0;
 }
 
-//#define MODE_BTN_IS_ACTIVE()	(PORTCbits.RC5 == GPIO_LOW)
-//void MODE_BTN_INIT()
-//{
+#define MODE_BTN_IS_ACTIVE()	(PORTBbits.RB0 == GPIO_LOW)
+void MODE_BTN_INIT()
+{
 //    TRISCbits.TRISC5 = GPIO_BIT_INPUT;
 //    //ANSELCbits.ANSELC5 = 0;
-//}
+}
 
 /* *******************   Public Function Definitions   ******************** */
 
@@ -53,7 +58,7 @@ void USER_BTN_INIT()
 void ButtonBspInit(void)
 {
     USER_BTN_INIT();
-//    MODE_BTN_INIT();        // Set up the Port for MODE Button input.
+    MODE_BTN_INIT();        // Set up the Port for MODE Button input.
 }
 
 //-------------------------------
@@ -64,7 +69,11 @@ void ButtonBspInit(void)
 //-------------------------------
 bool userButtonBspIsActive(void)
 {
-	return USER_BTN_IS_ACTIVE();
+//    if (PORTBbits.RB0 == GPIO_LOW)
+//        return true;
+//    else
+        return false;
+//	return USER_BTN_IS_ACTIVE();
 }
 
 //-------------------------------
@@ -73,10 +82,10 @@ bool userButtonBspIsActive(void)
 // Description: Reads the digital input state of the MODE button
 // Returns: TRUE if the button is pushed, else false.
 //-------------------------------
-//bool ModeButtonBspIsActive(void)
-//{
-//	return MODE_BTN_IS_ACTIVE();
-//}
+bool ModeButtonBspIsActive(void)
+{
+	return MODE_BTN_IS_ACTIVE();
+}
 
 // end of file.
 //-------------------------------------------------------------------------

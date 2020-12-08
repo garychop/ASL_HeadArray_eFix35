@@ -379,6 +379,18 @@ static void BeepPatternTask(void)
 }
 
 //-------------------------------
+// Function: IsBeepEnabled
+// Description: Get the status of the DIP switch for the Beep
+// Returns: "true" if the Beeps should be making obnoxious noise or
+//      "false" to operate in silence.
+//-------------------------------
+
+bool IsBeepEnabled(void)
+{
+    return (IsBeepFeatureEnable());
+}
+
+//-------------------------------
 // Function: BeepPatternStart
 //
 // Description: 

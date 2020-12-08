@@ -32,7 +32,7 @@
 
 // from local
 #include "app_common.h"
-
+#include "inc/beeper.h"
 
 /* ******************************   Macros   ****************************** */
 
@@ -116,7 +116,7 @@ bool appCommonFeatureIsEnabled(FunctionalFeature_t feature)
 //-------------------------------
 bool appCommonSoundEnabled(void)
 {
-    return (IsBeepEnabled());
+    return IsBeepEnabled();
 }
 
 //-------------------------------

@@ -28,14 +28,16 @@
 
 /* ******************************   Macros   ****************************** */
 
+
+#ifdef _18F46K40
+#define BEEPER_INIT()		INLINE_EXPR(TRISDbits.TRISD0 = GPIO_BIT_OUTPUT; ANSELDbits.ANSELD0 = 0; BEEPER_SET(false))
+#else
+
+#define BEEPER_INIT()		INLINE_EXPR(TRISCbits.TRISC1 = GPIO_BIT_OUTPUT; BEEPER_SET(false))
 #define BEEPER_IS_ACTIVE()	(LATCbits.LC1 == GPIO_LOW)
 #define BEEPER_SET(active)	INLINE_EXPR(LATCbits.LC1 = active ? GPIO_LOW : GPIO_HIGH)
 #define BEEPER_TOGGLE()		INLINE_EXPR(BEEPER_SET(BEEPER_IS_ACTIVE() ? false : true))
 
-#ifdef _18F46K40
-    #define BEEPER_INIT()		INLINE_EXPR(TRISDbits.TRISD0 = GPIO_BIT_OUTPUT; ANSELDbits.ANSELD0 = 0; BEEPER_SET(false))
-#else
-    #define BEEPER_INIT()		INLINE_EXPR(TRISCbits.TRISC1 = GPIO_BIT_OUTPUT; BEEPER_SET(false))
 #endif
 
 /* *******************   Public Function Definitions   ******************** */
@@ -48,6 +50,7 @@
 //-------------------------------
 void beeperBspInit(void)
 {
+    TRISDbits.TRISD3 = GPIO_BIT_INPUT;      // This is DIP Switch #6
 	BEEPER_INIT();
 }
 
@@ -73,5 +76,17 @@ bool beeperBspActiveGet(void)
 	return BEEPER_IS_ACTIVE();
 }
 
+//-------------------------------
+// Function: IsBeepFeatureEnable
+//
+// Description: Gets the active/inactive state of the beeper switch
+//      on the back panel.
+//
+//-------------------------------
+bool IsBeepFeatureEnable (void)
+{
+    return (PORTDbits.RD3 == GPIO_LOW);
+}
+
 // end of file.
-//-------------------------------------------------------------------------
+//------------------------------------------------------------------------------

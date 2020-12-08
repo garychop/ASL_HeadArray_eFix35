@@ -121,6 +121,16 @@ void MainTaskInitialise(void)
 {
     g_BeepPattern = BEEPER_PATTERN_EOL;
     g_StartupDelayCounter = 1000 / MAIN_TASK_DELAY;
+
+//    #define BLUETOOTH_LED_SIGNAL_IS_ACTIVE()        (LATCbits.LATC2 == GPIO_HIGH)
+//    #define BLUETOOTH_LED_SIGNAL_SET(active)        INLINE_EXPR(LATCbits.LATC2 = active ? GPIO_HIGH : GPIO_LOW)
+//    #define BLUETOOTH_LED_SIGNAL_TOGGLE()           INLINE_EXPR(BLUETOOTH_LED_SIGNAL_SET(!BLUETOOTH_LED_SIGNAL_IS_ACTIVE()))
+//    #define BLUETOOTH_LED_SIGNAL_INIT()             INLINE_EXPR(TRISCbits.TRISC2 = GPIO_BIT_OUTPUT; BLUETOOTH_LED_SIGNAL_SET(false))
+//    #define BLUETOOTH_LED_SIGNAL_DEINIT()   		INLINE_EXPR(TRISCbits.TRISC2 = GPIO_BIT_INPUT;)
+    
+//    TRISCbits.TRISC2 = GPIO_BIT_INPUT;
+//    TRISCbits.TRISC2 = GPIO_BIT_OUTPUT; 
+//    LATCbits.LATC2 = GPIO_LOW;
     
     MainState = Startup_State;
 
@@ -303,6 +313,7 @@ static void Driving_UserSwitch_State(void)
         if (g_SwitchDelay == 0)
         {
             g_BeepPattern = ANNOUNCE_BLUETOOTH;
+//            GenOutCtrlApp_SetStateAll (GEN_OUT_BLUETOOTH_ENABLED);
             MainState = BluetoothSetup_State;
         }
     }
@@ -348,8 +359,7 @@ static void BluetoothSetup_State (void)
 // State: DoBluetooth
 //      Stay here and send active pad info to Bluetooth module.
 //      If user port switch is active then
-//          - Beep to annunciate driving.
-//          - Switch to Driving_Setup_State
+//          - Switch to check for Out-of-Neutral State
 //-------------------------------------------------------------------------
 static void DoBluetooth_State (void)
 {
@@ -358,8 +368,7 @@ static void DoBluetooth_State (void)
     // driving state.
     if (g_ExeternalSwitchStatus & USER_SWITCH)
     {
-        
-        // Set to Blue tooth state
+//        GenOutCtrlApp_SetStateAll (GEN_OUT_BLUETOOTH_DISABLED);
         g_StartupDelayCounter = (500 / MAIN_TASK_DELAY);
         MainState = OONAPU_Setup_State;
     }

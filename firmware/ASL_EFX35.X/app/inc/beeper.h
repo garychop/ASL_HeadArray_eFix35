@@ -51,6 +51,7 @@ void beeperInit(void);
 Evt_t beeperBeep(BeepPattern_t pattern);
 Evt_t beeperBeepBlocking(BeepPattern_t pattern);
 Evt_t BeeperWaitUntilPatternCompletes(void);
+bool IsBeepEnabled(void);
 
 #endif // BEEPER_H
 

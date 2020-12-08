@@ -115,11 +115,11 @@
     // The Bluetooth LED is supported on the ASL104.
     // Bluetooth BLUE LED control macros
 // TODO: Investigate why RC5 is not available.
-//    #define BLUETOOTH_LED_SIGNAL_IS_ACTIVE()        (LATCbits.LATC5 == GPIO_HIGH)
-//    #define BLUETOOTH_LED_SIGNAL_SET(active)        INLINE_EXPR(LATCbits.LATC5 = active ? GPIO_HIGH : GPIO_LOW)
-//    #define BLUETOOTH_LED_SIGNAL_TOGGLE()           INLINE_EXPR(BLUETOOTH_LED_SIGNAL_SET(!BLUETOOTH_LED_SIGNAL_IS_ACTIVE()))
-//    #define BLUETOOTH_LED_SIGNAL_INIT()             INLINE_EXPR(TRISCbits.TRISC5 = GPIO_BIT_OUTPUT; BLUETOOTH_LED_SIGNAL_SET(false))
-//    #define BLUETOOTH_LED_SIGNAL_DEINIT()   		INLINE_EXPR(TRISCbits.TRISC5 = GPIO_BIT_INPUT;)
+    #define BLUETOOTH_LED_SIGNAL_IS_ACTIVE()        (LATCbits.LATC2 == GPIO_HIGH)
+    #define BLUETOOTH_LED_SIGNAL_SET(active)        INLINE_EXPR(LATCbits.LATC2 = active ? GPIO_HIGH : GPIO_LOW)
+    #define BLUETOOTH_LED_SIGNAL_TOGGLE()           INLINE_EXPR(BLUETOOTH_LED_SIGNAL_SET(!BLUETOOTH_LED_SIGNAL_IS_ACTIVE()))
+    #define BLUETOOTH_LED_SIGNAL_INIT()             INLINE_EXPR(TRISCbits.TRISC2 = GPIO_BIT_OUTPUT; BLUETOOTH_LED_SIGNAL_SET(false))
+    #define BLUETOOTH_LED_SIGNAL_DEINIT()   		INLINE_EXPR(TRISCbits.TRISC2 = GPIO_BIT_INPUT;)
 
 
 
@@ -256,7 +256,7 @@ bool GenOutCtrlBsp_Disable(GenOutCtrlId_t item_id)
 //			// Signal line used by this device to let the system know things like "resetting" and "user button short press"
 //			INTERNAL_SYS_ACTION_SIGNAL_DEINIT();
 //			break;
-//
+
 //        case GEN_OUT_CTRL_ID_BT_LED:
 //            BLUETOOTH_LED_SIGNAL_DEINIT();
 //            break;
