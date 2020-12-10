@@ -478,7 +478,7 @@ static void HeadArrayInputControlTask(void)
             g_PadInfo[HEAD_ARRAY_SENSOR_RIGHT].m_PreviousPadStatus = g_PadInfo[HEAD_ARRAY_SENSOR_RIGHT].m_CurrentPadStatus;
         }
         
-        task_wait(MILLISECONDS_TO_TICKS(20));
+        task_wait(MILLISECONDS_TO_TICKS(HEAD_ARRAY_TASK_DELAY));
 	}
     task_close();
 }

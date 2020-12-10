@@ -53,8 +53,6 @@
 // Defines and Macros 
 //------------------------------------------------------------------------------
 
-#define MAIN_TASK_DELAY (23)        // Number of milliseconds for the main task.
-
 //------------------------------------------------------------------------------
 // Local Variables
 //------------------------------------------------------------------------------
@@ -64,12 +62,8 @@ static int g_StartupDelayCounter;
 static int g_SwitchDelay;
 static uint8_t g_ExeternalSwitchStatus;
 static BeepPattern_t g_BeepPattern = BEEPER_PATTERN_EOL;
-static uint8_t g_BeeperTaskID = 0;
 static uint8_t g_MainTaskID = 0;
 
-
-//static BeepMsg_t g_BeepMsgPool[BEEP_POOL_SIZE];
-static Msg_t g_BeepMsgPool[BEEP_POOL_SIZE];
 
 //------------------------------------------------------------------------------
 // Forward Declarations
@@ -143,7 +137,6 @@ void MainTaskInitialise(void)
 
     g_MainTaskID = task_create(MainTask , NULL, MAIN_TASK_PRIO, NULL, 0, 0);
 
-    g_BeeperTaskID = task_create(NewTask, NULL, NEW_TASK7, g_BeepMsgPool, BEEP_POOL_SIZE, sizeof (Msg_t)); // sizeof (BeepMsg_t));
 
 }
 
@@ -151,28 +144,28 @@ void MainTaskInitialise(void)
 // Function: MainTask
 // Description: This is the main task that controls everything.
 //-------------------------------------------------------------------------
-int IGotAMsg = 0;
-
-static void NewTask (void)
-{
-    static Msg_t newTaskBeepMsg;
-
-    task_open();
-
-    while (1)
-    {
-        msg_receive_async (g_BeeperTaskID, &newTaskBeepMsg);
-        if (newTaskBeepMsg.signal != NO_MSG_ID)
-        {
-            ++IGotAMsg;
-        }
-
-        task_wait(MILLISECONDS_TO_TICKS(100));
-
-    }
-    
-    task_close();
-}
+//int IGotAMsg = 0;
+//
+//static void NewTask (void)
+//{
+//    static Msg_t newTaskBeepMsg;
+//
+//    task_open();
+//
+//    while (1)
+//    {
+//        msg_receive (g_BeeperTaskID, &newTaskBeepMsg);
+//        if (newTaskBeepMsg.signal != NO_MSG_ID)
+//        {
+//            ++IGotAMsg;
+//        }
+//
+//        task_wait(MILLISECONDS_TO_TICKS(100));
+//
+//    }
+//    
+//    task_close();
+//}
 
 static void MainTask (void)
 {
@@ -191,7 +184,7 @@ static void MainTask (void)
         if (g_BeepPattern != BEEPER_PATTERN_EOL)
         {
             myBeepMsg.signal = g_BeepPattern;
-            msg_post_async (g_BeeperTaskID, myBeepMsg);
+            msg_post (g_BeeperTaskID, myBeepMsg);
             
 //            event_to_send_beeper_task = beeperBeep(g_BeepPattern);
 //            if (event_to_send_beeper_task != NO_EVENT)

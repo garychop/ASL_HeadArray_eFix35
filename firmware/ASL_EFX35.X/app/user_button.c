@@ -206,11 +206,11 @@ static void UserButtonMonitorTask (void)
                     if (currentButtonPattern & USER_SWITCH)
                     {
 // Use this code if you want to annunciate a button push here.                        
-                        event_to_send_beeper_task = beeperBeep(BEEPER_PATTERN_USER_BUTTON_SHORT_PRESS);
-                        if (event_to_send_beeper_task != NO_EVENT)
-                        {
-                            event_signal(event_to_send_beeper_task);
-                        }
+//                        event_to_send_beeper_task = beeperBeep(BEEPER_PATTERN_USER_BUTTON_SHORT_PRESS);
+//                        if (event_to_send_beeper_task != NO_EVENT)
+//                        {
+//                            event_signal(event_to_send_beeper_task);
+//                        }
                         g_ButtonState = PROCESS_ACTIVE_USER_SWTICH;
                     }
                     else if (currentButtonPattern & MODE_SWITCH)
@@ -303,7 +303,7 @@ static void UserButtonMonitorTask (void)
             }
         }
 
-		task_wait(MILLISECONDS_TO_TICKS(10));
+		task_wait(MILLISECONDS_TO_TICKS(USER_BUTTON_TASK_DELAY));
 
     }  // End while
 

@@ -47,18 +47,14 @@ typedef enum
 // Mailbox definitions for sending info to Beep Task.
 #define BEEP_POOL_SIZE (4)
 
-typedef struct {
-    Msg_t m_Super;
-    BeepPattern_t m_BeepType;
-} BeepMsg_t;
-//extern static uint8_t g_BeeperTaskID;
+extern uint8_t g_BeeperTaskID;
 
 /* ***********************   Function Prototypes   ************************ */
 
 void beeperInit(void);
-Evt_t beeperBeep(BeepPattern_t pattern);
-Evt_t beeperBeepBlocking(BeepPattern_t pattern);
-Evt_t BeeperWaitUntilPatternCompletes(void);
+//Evt_t beeperBeep(BeepPattern_t pattern);
+//Evt_t beeperBeepBlocking(BeepPattern_t pattern);
+//Evt_t BeeperWaitUntilPatternCompletes(void);
 bool IsBeepEnabled(void);
 
 #endif // BEEPER_H
