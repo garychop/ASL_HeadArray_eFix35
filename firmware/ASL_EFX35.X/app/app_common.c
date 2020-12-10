@@ -46,7 +46,7 @@
 /* ***********************   File Scope Variables   *********************** */
 
 static volatile bool device_is_active;
-static volatile bool device_in_calibration;
+//static volatile bool device_in_calibration;
 
 /* ***********************   Function Prototypes   ************************ */
 
@@ -65,7 +65,7 @@ void AppCommonInit(void)
 {
     device_is_active = false;
     
-    device_in_calibration = false;
+    //device_in_calibration = false;
 
     (void)task_create(SystemSupervisorTask , NULL, SYSTEM_SUPERVISOR_TASK_PRIO, NULL, 0, 0);
 }
@@ -245,10 +245,10 @@ bool AppCommonDeviceActiveGet(void)
 //		When true, all outputs are shutoff (sound, control, etc).
 //
 //-------------------------------
-void AppCommonCalibrationActiveSet(bool put_into_calibration)
-{
-	device_in_calibration = put_into_calibration;
-}
+//void AppCommonCalibrationActiveSet(bool put_into_calibration)
+//{
+//	//device_in_calibration = put_into_calibration;
+//}
 
 //-------------------------------
 // Function: AppCommonCalibrationActiveGet
@@ -257,10 +257,10 @@ void AppCommonCalibrationActiveSet(bool put_into_calibration)
 //		When true, all outputs are shutoff (sound, control, etc).
 //
 //-------------------------------
-bool AppCommonCalibrationActiveGet(void)
-{
-	return device_in_calibration;
-}
+//bool AppCommonCalibrationActiveGet(void)
+//{
+//	//return device_in_calibration;
+//}
 
 /* ********************   Private Function Definitions   ****************** */
 

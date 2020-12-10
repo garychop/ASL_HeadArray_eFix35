@@ -64,9 +64,10 @@ static int g_StartupDelayCounter;
 static int g_SwitchDelay;
 static uint8_t g_ExeternalSwitchStatus;
 static BeepPattern_t g_BeepPattern = BEEPER_PATTERN_EOL;
-uint8_t g_MainTaskID = 0;
+static uint8_t g_BeeperTaskID = 0;
+static uint8_t g_MainTaskID = 0;
 
-uint8_t g_BeeperTaskID;
+
 //static BeepMsg_t g_BeepMsgPool[BEEP_POOL_SIZE];
 static Msg_t g_BeepMsgPool[BEEP_POOL_SIZE];
 
@@ -142,7 +143,7 @@ void MainTaskInitialise(void)
 
     g_MainTaskID = task_create(MainTask , NULL, MAIN_TASK_PRIO, NULL, 0, 0);
 
-    g_BeeperTaskID = task_create(NewTask, NULL, BEEPER_MGMT_TASK_PRIO+10, (Msg_t*)g_BeepMsgPool, BEEP_POOL_SIZE, sizeof (BeepMsg_t));
+    g_BeeperTaskID = task_create(NewTask, NULL, NEW_TASK7, g_BeepMsgPool, BEEP_POOL_SIZE, sizeof (Msg_t)); // sizeof (BeepMsg_t));
 
 }
 
@@ -154,7 +155,7 @@ int IGotAMsg = 0;
 
 static void NewTask (void)
 {
-    Msg_t newTaskBeepMsg;
+    static Msg_t newTaskBeepMsg;
 
     task_open();
 
@@ -165,7 +166,9 @@ static void NewTask (void)
         {
             ++IGotAMsg;
         }
+
         task_wait(MILLISECONDS_TO_TICKS(100));
+
     }
     
     task_close();
@@ -185,12 +188,10 @@ static void MainTask (void)
         
         MainState();
 
-        task_wait(MILLISECONDS_TO_TICKS(MAIN_TASK_DELAY));
-
         if (g_BeepPattern != BEEPER_PATTERN_EOL)
         {
             myBeepMsg.signal = g_BeepPattern;
-            msg_post (g_BeeperTaskID, myBeepMsg);
+            msg_post_async (g_BeeperTaskID, myBeepMsg);
             
 //            event_to_send_beeper_task = beeperBeep(g_BeepPattern);
 //            if (event_to_send_beeper_task != NO_EVENT)
@@ -199,6 +200,9 @@ static void MainTask (void)
 //            }
             g_BeepPattern = BEEPER_PATTERN_EOL;
          }
+
+        task_wait(MILLISECONDS_TO_TICKS(MAIN_TASK_DELAY));
+
     }
     
     task_close();

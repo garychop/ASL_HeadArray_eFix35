@@ -25,6 +25,7 @@
 #define HA_HHP_IF_MGMT_TASK_PRIO	(2)
 #define SYSTEM_SUPERVISOR_TASK_PRIO	(0)
 #define MAIN_TASK_PRIO              (6)
+#define NEW_TASK7                   (7)
 
 #endif // End of RTOS_TASK_PRIORITIES_H_
 

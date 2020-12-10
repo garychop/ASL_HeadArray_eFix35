@@ -57,7 +57,7 @@ static void DEV_TEST_MirrorPadsOnBluetoothOutputs(void);
 // Description: Main entry point for the program.
 //
 //-------------------------------
-void main(void)
+int main(void)
 {
 #if defined(DEV_TEST_MIRROR_PADS_ON_BLUETOOTH_OUTPUTS)
     DEV_TEST_MirrorPadsOnBluetoothOutputs();
@@ -98,6 +98,8 @@ void main(void)
     // Kick off the RTOS. This will never return.
 	// NOTE: Interrupts are enabled by this function
     os_start();
+    
+    return (0);
 }
 
 // Useful, but need all the space we can get.

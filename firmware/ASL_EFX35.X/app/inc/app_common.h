@@ -61,8 +61,8 @@ void AppCommonDeviceActiveSet(bool is_active);
 bool AppCommonDeviceActiveGet(void);
 void AppCommonForceActiveState (bool is_active);
 
-void AppCommonCalibrationActiveSet(bool put_into_calibration);
-bool AppCommonCalibrationActiveGet(void);
+//void AppCommonCalibrationActiveSet(bool put_into_calibration);
+//bool AppCommonCalibrationActiveGet(void);
 
 #endif // APP_COMMON_H
 

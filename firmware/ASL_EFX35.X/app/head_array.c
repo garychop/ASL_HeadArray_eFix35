@@ -497,7 +497,7 @@ static bool SetOutputs(void)
 	if (AppCommonDeviceActiveGet())
 	{
 		// "Power is on"
-		if (!AppCommonCalibrationActiveGet())
+		if (1)  // (!AppCommonCalibrationActiveGet())
 		{
 			// Not in calibration mode.
 			switch (current_feature)
