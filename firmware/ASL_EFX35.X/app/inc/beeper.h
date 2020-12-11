@@ -40,13 +40,18 @@ typedef enum
 	BEEPER_PATTERN_USER_BUTTON_LONG_PRESS,
 	BEEPER_PATTERN_EEPROM_NOT_INIT_ON_BOOT,
 	BEEPER_PATTERN_MODE_ACTIVE,
+	BEEPER_PATTERN_PAD_ACTIVE,
 	// Nothing else may be defined past this point!
 	BEEPER_PATTERN_EOL
 } BeepPattern_t;
 
-// Mailbox definitions for sending info to Beep Task.
-#define BEEP_POOL_SIZE (4)
+typedef struct 
+{
+    Msg_t m_Super;
+    uint8_t m_MsgID;
+} BeepMsg_t;
 
+// Mailbox definitions for sending info to Beep Task.
 extern uint8_t g_BeeperTaskID;
 
 /* ***********************   Function Prototypes   ************************ */

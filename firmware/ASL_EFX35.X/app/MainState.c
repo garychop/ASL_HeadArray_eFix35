@@ -70,7 +70,7 @@ static uint8_t g_MainTaskID = 0;
 //------------------------------------------------------------------------------
 static void NewTask (void);
 
-static void MainTaskInitialise(void);
+//static void MainTaskInitialise(void);
 static void MainTask (void);
 static void MirrorDigitalInputOnBluetoothOutput(void);
 
@@ -184,7 +184,7 @@ static void MainTask (void)
         if (g_BeepPattern != BEEPER_PATTERN_EOL)
         {
             myBeepMsg.signal = g_BeepPattern;
-            msg_post (g_BeeperTaskID, myBeepMsg);
+            msg_post_async (g_BeeperTaskID, myBeepMsg);
             
 //            event_to_send_beeper_task = beeperBeep(g_BeepPattern);
 //            if (event_to_send_beeper_task != NO_EVENT)
@@ -270,7 +270,7 @@ static void Driving_Setup_State (void)
     // When it does, go to the Driving State.
     if ((g_ExeternalSwitchStatus & USER_SWITCH) == false)
     {
-         g_BeepPattern = ANNOUNCE_NEXT_FUNCTION; // ANNOUNCE_POWER_ON;
+        //g_BeepPattern = BEEPER_PATTERN_PAD_ACTIVE; // ANNOUNCE_POWER_ON;
         // Set to Blue tooth state
         MainState = Driving_State;
     }

@@ -33,7 +33,7 @@
 // I believe that msg's must be pulled out of the queue. It behaves if the
 // msg queue gets full even if use the "_async" calls.
 #define HEAD_ARRAY_TASK_DELAY (20)
-#define USER_BUTTON_TASK_DELAY (31)
+#define USER_BUTTON_TASK_DELAY (10)
 
 #endif // End of RTOS_TASK_PRIORITIES_H_
 

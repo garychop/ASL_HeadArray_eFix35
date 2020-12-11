@@ -161,6 +161,7 @@ static void UserButtonMonitorTask (void)
     int currentFeature;
     uint8_t currentButtonPattern = 0;
     uint8_t feature2;
+    static Msg_t myBeepMsg;
 
     task_open();
 
@@ -211,6 +212,8 @@ static void UserButtonMonitorTask (void)
 //                        {
 //                            event_signal(event_to_send_beeper_task);
 //                        }
+                        myBeepMsg.signal = BEEPER_PATTERN_USER_BUTTON_SHORT_PRESS;
+                        msg_post_async (g_BeeperTaskID, myBeepMsg);
                         g_ButtonState = PROCESS_ACTIVE_USER_SWTICH;
                     }
                     else if (currentButtonPattern & MODE_SWITCH)
