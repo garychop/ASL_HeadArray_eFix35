@@ -63,7 +63,7 @@ static int g_StartupDelayCounter;
 static int g_SwitchDelay;
 static uint8_t g_ExeternalSwitchStatus;
 
-static BeepPattern_t g_BeepPatternRequest = BEEPER_PATTERN_EOL;
+//static BeepPattern_t g_BeepPatternRequest = BEEPER_PATTERN_EOL;
 static uint8_t g_MainTaskID = 0;
 
 
@@ -122,7 +122,7 @@ static void DoBluetooth_State (void);
 
 void MainTaskInitialise(void)
 {
-    g_BeepPatternRequest = BEEPER_PATTERN_EOL;
+    //g_BeepPatternRequest = BEEPER_PATTERN_EOL;
     g_StartupDelayCounter = 1000 / MAIN_TASK_DELAY;
 
 //    #define BLUETOOTH_LED_SIGNAL_IS_ACTIVE()        (LATCbits.LATC2 == GPIO_HIGH)
@@ -146,34 +146,9 @@ void MainTaskInitialise(void)
 // Function: MainTask
 // Description: This is the main task that controls everything.
 //-------------------------------------------------------------------------
-//int IGotAMsg = 0;
-//
-//static void NewTask (void)
-//{
-//    static Msg_t newTaskBeepMsg;
-//
-//    task_open();
-//
-//    while (1)
-//    {
-//        msg_receive (g_BeeperTaskID, &newTaskBeepMsg);
-//        if (newTaskBeepMsg.signal != NO_MSG_ID)
-//        {
-//            ++IGotAMsg;
-//        }
-//
-//        task_wait(MILLISECONDS_TO_TICKS(100));
-//
-//    }
-//    
-//    task_close();
-//}
 
 static void MainTask (void)
 {
-    Evt_t event_to_send_beeper_task;
-    static Msg_t myBeepMsg;
-   
     task_open();
 
     while (1)
@@ -183,15 +158,15 @@ static void MainTask (void)
         
         MainState();
 
-        if (g_BeepPatternRequest != BEEPER_PATTERN_EOL)     // I want to send a new command to Beeper task
-        {
-            if (g_NewBeepPattern == BEEPER_PATTERN_EOL)
-            {
-                g_NewBeepPattern = g_BeepPatternRequest;    // "Send" to beeper task.
-                g_BeepPatternRequest = BEEPER_PATTERN_EOL;  // Clear this request.
-                
-            }
-        }
+//        if (g_BeepPatternRequest != BEEPER_PATTERN_EOL)     // I want to send a new command to Beeper task
+//        {
+//            if (g_NewBeepPattern == BEEPER_PATTERN_EOL)
+//            {
+//                g_NewBeepPattern = g_BeepPatternRequest;    // "Send" to beeper task.
+//                g_BeepPatternRequest = BEEPER_PATTERN_EOL;  // Clear this request.
+//                
+//            }
+//        }
 
         task_wait(MILLISECONDS_TO_TICKS(MAIN_TASK_DELAY));
 
@@ -208,7 +183,8 @@ static void Idle_State (void)
 
 //-------------------------------------------------------------------------
 // State: Startup_State
-// Description: Stay here until 500 milliseconds lapses then switch to OONAPU_State.
+// Description: Stay here until 500 milliseconds lapses then switch to OONAPU_State
+//      or to IDLE state to wait for user to press the switch.
 //-------------------------------------------------------------------------
 static void Startup_State (void)
 {
@@ -219,9 +195,19 @@ static void Startup_State (void)
     if (--g_StartupDelayCounter < 1) // Have we waited long enough.
     {
         g_StartupDelayCounter = (500 / MAIN_TASK_DELAY);
-        MainState = OONAPU_State;
+        if (Is_SW3_ON())    // If ON, power up with the chair's power.
+        {
+            MainState = OONAPU_State;
+        }
+        else    // Go to a Drive Disable state.
+        {
+            GenOutCtrlBsp_SetInactive (GEN_OUT_CTRL_ID_POWER_LED);  // Turn off the LED
+            MainState = Driving_Idle_State; // wait for push button.
+        }
     }
 }
+
+//-------------------------------------------------------------------------
 
 static void OONAPU_Setup_State (void)
 {
@@ -230,6 +216,7 @@ static void OONAPU_Setup_State (void)
     MainState = OONAPU_State;
     
 }
+
 //-------------------------------------------------------------------------
 // State: OONAPU_State (Out-Of-Neutral-At-Power-Up acronym)
 // Description: Stay here until No Pads are active then change to Driving State
@@ -270,6 +257,8 @@ static void Driving_Setup_State (void)
     if ((g_ExeternalSwitchStatus & USER_SWITCH) == false)
     {
         //g_BeepPatternRequest = BEEPER_PATTERN_PAD_ACTIVE; // ANNOUNCE_POWER_ON;
+        //beeperBeep (????);
+
         // Set to Blue tooth state
         MainState = Driving_State;
     }
@@ -314,12 +303,13 @@ static void Driving_State (void)
     {
         speedPercentage = 0;        // Force no drive demand.
         directionPercentage = 0;
-        // TODO: Comment out the following code to allow it execute
-        GenOutCtrlApp_SetStateAll(GEN_OUT_POWER_LED_OFF);
 
-        //LATEbits.LATE0 = GPIO_HIGH;             // This turns the LED off #1
-        //GenOutCtrlBsp_SetInactive (GEN_OUT_CTRL_ID_POWER_LED);  // Turn off the LED
-        g_BeepPatternRequest = BEEPER_PATTERN_GOTO_IDLE;
+        // Turn off the Power LED
+        //GenOutCtrlApp_SetStateAll(GEN_OUT_POWER_LED_OFF);
+        GenOutCtrlBsp_SetInactive (GEN_OUT_CTRL_ID_POWER_LED);  // Turn off the LED
+
+        //g_BeepPatternRequest = BEEPER_PATTERN_GOTO_IDLE;
+        beeperBeep (BEEPER_PATTERN_GOTO_IDLE);
         // Setup delay time.
         g_SwitchDelay = 3000 / MAIN_TASK_DELAY;
         MainState = Driving_UserSwitch_State;
@@ -345,7 +335,8 @@ static void Driving_UserSwitch_State(void)
         // Did we wait long enough to switch to Bluetooth
         if (g_SwitchDelay == 0)
         {
-            g_BeepPatternRequest = ANNOUNCE_BLUETOOTH;
+            //g_BeepPatternRequest = ANNOUNCE_BLUETOOTH;
+            beeperBeep (ANNOUNCE_BLUETOOTH);
 //            GenOutCtrlApp_SetStateAll (GEN_OUT_BLUETOOTH_ENABLED);
             MainState = BluetoothSetup_State;
         }
@@ -365,13 +356,21 @@ static void Driving_Idle_State (void)
 {
     if (g_ExeternalSwitchStatus & USER_SWITCH)
     {
-        g_BeepPatternRequest = BEEPER_PATTERN_RESUME_DRIVING;
+        //g_BeepPatternRequest = BEEPER_PATTERN_RESUME_DRIVING;
+        beeperBeep (BEEPER_PATTERN_RESUME_DRIVING);
+
+        // Turn on the Power LED
+        //GenOutCtrlApp_SetStateAll (GEN_OUT_POWER_LED_ON);
+        GenOutCtrlBsp_SetActive (GEN_OUT_CTRL_ID_POWER_LED);
         
-        // TODO: Comment out the following code to allow it execute
-        GenOutCtrlApp_SetStateAll (GEN_OUT_POWER_LED_ON);
-        //LATEbits.LATE0 = GPIO_LOW;             // This turns the LED off #1
-        //GenOutCtrlBsp_SetActive (GEN_OUT_CTRL_ID_POWER_LED);
-        MainState = OONAPU_Setup_State;
+        if (Is_SW3_ON())
+        {
+            MainState = Driving_Setup_State;
+        }
+        else
+        {
+            MainState = OONAPU_Setup_State;
+        }
     }
 }
 
@@ -430,5 +429,13 @@ static void MirrorDigitalInputOnBluetoothOutput(void)
 	}
 }
 
+//------------------------------------------------------------------------------
+// Returns true if the Main State engine is in a condition that beeping
+// is appropriate.
+//------------------------------------------------------------------------------
+bool Does_Main_Allow_Beeping (void)
+{
+    return (MainState != Driving_Idle_State);   // This is the only time to quiet the beeping
+}
 
 

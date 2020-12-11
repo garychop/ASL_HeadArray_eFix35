@@ -24,6 +24,9 @@ void ButtonBspInit(void);
 bool userButtonBspIsActive(void);
 bool ModeButtonBspIsActive(void);
 
+bool Is_SW3_ON(void);
+bool Is_SW6_ON(void);
+
 #endif // USER_BUTTON_BSP_H
 
 // end of file.

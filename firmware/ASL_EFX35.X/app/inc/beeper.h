@@ -59,7 +59,7 @@ extern BeepPattern_t g_NewBeepPattern;
 /* ***********************   Function Prototypes   ************************ */
 
 void beeperInit(void);
-//Evt_t beeperBeep(BeepPattern_t pattern);
+void beeperBeep(BeepPattern_t pattern);
 //Evt_t beeperBeepBlocking(BeepPattern_t pattern);
 //Evt_t BeeperWaitUntilPatternCompletes(void);
 bool IsBeepEnabled(void);

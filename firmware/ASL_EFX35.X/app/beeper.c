@@ -28,6 +28,7 @@
 #include "common.h"
 #include "stopwatch.h"
 #include "app_common.h"
+#include "inc/MainState.h"
 
 // from local
 #include "beeper_bsp.h"
@@ -77,6 +78,7 @@ typedef struct
 /* ***********************   Project Scope Variables   *********************** */
 
 BeepPattern_t g_NewBeepPattern;
+BeepPattern_t g_PendingBeepPattern;
 
 /* ***********************   File Scope Variables   *********************** */
 
@@ -284,27 +286,6 @@ void beeperInit(void)
 }
 
 //-------------------------------
-// Function: beeperBeep
-//
-// Description: Beeps a pattern, in a non-blocking way.
-//
-// Note: If a beep session is running, new ones are ignored unless of higher priority
-//
-//-------------------------------
-Evt_t beeperBeep(BeepPattern_t pattern)
-{
-//	if (appCommonSoundEnabled())
-//	{
-//		return BeepPatternStart(pattern);
-//	}
-//	else
-//	{
-		return NO_EVENT;
-//	}
-}
-
-
-//-------------------------------
 // Function: BeepPatternTick
 //
 // Description: Handles state control for a beep session.
@@ -363,45 +344,23 @@ static void BeepPatternTask(void)
     task_close();
 }
 
-#ifdef USING_MESSAGING
-static void BeepPatternTask(void)
+//-------------------------------
+// Function: beeperBeep
+//
+// Description: Beeps a pattern, in a non-blocking way.
+//
+// Note: If a beep session is running, new ones are ignored unless of higher priority
+//
+//-------------------------------
+void beeperBeep(BeepPattern_t pattern)
 {
-    task_open();
-
-    while (1)
+    if (BeepStateEngine != BeepReady)
     {
-        task_wait(MILLISECONDS_TO_TICKS(BEEPER_TASK_DELAY));
-
-        g_LastBeepMsg.signal = BEEPER_PATTERN_EOL;
-        //g_NewBeep = false;
-        msg_receive_async (g_BeeperTaskID, &g_LastBeepMsg);
-        if (g_LastBeepMsg.signal != NO_MSG_ID)
-        {
-            ++IGotAMsg;
-            // locate the beep pattern
-            for (uint8_t i = 0; i<MAX_BEEP_PATTERNS; ++i)
-            {
-                if (g_BeepPatterns[i][0].on_time_ms == g_LastBeepMsg.signal)
-                {
-                    // Check to see if we can (always) beep or if we
-                    // have to be smart about it and look at the DIP switch.
-                    g_NewBeep = true;
-                    g_PatternIndex = i;
-                    if (BeepStateEngine != BeepReady)
-                    {
-                        BeepStateEngine = ForceStopBeeping;
-                    }
-                    break;
-                }
-            }
-        }
-        
-
-        BeepStateEngine();
-	}
-    task_close();
+        BeepStateEngine = ForceStopBeeping;
+    }
+    
+    g_NewBeepPattern = pattern;
 }
-#endif // #ifdef USING_MESSAGING
 
 //-------------------------------
 // Function: IsBeepEnabled
@@ -412,6 +371,9 @@ static void BeepPatternTask(void)
 
 bool IsBeepEnabled(void)
 {
+    if (Does_Main_Allow_Beeping() == false)
+        return false;
+    
     return (IsBeepFeatureEnable());
 }
 

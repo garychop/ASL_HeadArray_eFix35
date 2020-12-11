@@ -28,11 +28,8 @@
 
 /* ******************************   Macros   ****************************** */
 
-// B0 is RESET on Schematic
-// D2 is 3/4_SW on schematic which is Switch #1 on DIP switch
-// B7 is 
-
-//#define USER_BTN_IS_ACTIVE()	(PORTBbits.RB0 == GPIO_LOW)
+void SW3_Init (void);
+void SW6_Init (void);
 
 void USER_BTN_INIT()
 {
@@ -59,6 +56,7 @@ void ButtonBspInit(void)
 {
     USER_BTN_INIT();
     MODE_BTN_INIT();        // Set up the Port for MODE Button input.
+    SW6_Init();
 }
 
 //-------------------------------
@@ -85,6 +83,32 @@ bool userButtonBspIsActive(void)
 bool ModeButtonBspIsActive(void)
 {
 	return MODE_BTN_IS_ACTIVE();
+}
+
+//-------------------------------------------------------------------------
+// DIP Switch #6 is on D3
+void SW6_Init()
+{
+    // This port is ALWAYS an input. The following code will not compile.
+    //TRISCbits.TRISC3 = GPIO_BIT_INPUT;
+}
+
+bool Is_SW6_ON(void)
+{
+    return (PORTDbits.RD3 == GPIO_LOW);
+}
+
+//-------------------------------------------------------------------------
+// DIP Switch #3 is on C4
+void SW3_Init (void)
+{
+    // This pin is always an Input. The following code will not comile.
+    //TRISCbits.TRISC4 = GPIO_BIT_INPUT;
+}
+
+bool Is_SW3_ON (void)
+{
+    return (PORTCbits.RC4 == GPIO_LOW);
 }
 
 // end of file.

@@ -32,6 +32,7 @@
 #include <xc.h> // include processor files - each processor file is guarded.  
 
 void MainTaskInitialise(void);
+bool Does_Main_Allow_Beeping(void);
 
 #endif	// MAIN_STATE_H
 

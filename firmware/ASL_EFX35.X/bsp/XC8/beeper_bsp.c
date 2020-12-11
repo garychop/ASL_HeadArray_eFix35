@@ -25,6 +25,7 @@
 
 // from local
 #include "beeper_bsp.h"
+#include "user_button_bsp.h"
 
 /* ******************************   Macros   ****************************** */
 
@@ -85,7 +86,7 @@ bool beeperBspActiveGet(void)
 //-------------------------------
 bool IsBeepFeatureEnable (void)
 {
-    return (PORTDbits.RD3 == GPIO_LOW);
+    return (Is_SW6_ON());
 }
 
 // end of file.
