@@ -35,6 +35,7 @@
 //#include "dac_bsp.h"
 #include "general_output_ctrl_app.h"
 #include "app_common.h"
+#include "beeper.h"
 
 // from local
 #include "head_array_bsp.h"
@@ -98,6 +99,8 @@ struct
     bool m_CurrentPadStatus;
     bool m_PreviousPadStatus;
 } g_PadInfo[HEAD_ARRAY_SENSOR_EOL];
+
+BeepPattern_t g_HeadArrayBeepPattern;
 
 // Last recorded values for digital and proportional input states.
 //static volatile bool pad_dig_state[(int)HEAD_ARRAY_SENSOR_EOL];
@@ -176,7 +179,8 @@ void headArrayinit(void)
 	// Initialize all submodules controlled by this module.
 	headArrayBspInit();
 	bluetoothSimpleIfBspInit();
-	
+	g_HeadArrayBeepPattern = BEEPER_PATTERN_EOL;
+    
 	// Fetch initial values from the EEPROM
 //	(void)SyncWithEeprom();
 
@@ -437,6 +441,16 @@ static void HeadArrayInputControlTask(void)
     
 	while (1)
 	{
+        if (g_HeadArrayBeepPattern != BEEPER_PATTERN_EOL)     // I want to send a new command to Beeper task
+        {
+            if (g_NewBeepPattern == BEEPER_PATTERN_EOL)
+            {
+                g_NewBeepPattern = g_HeadArrayBeepPattern;    // "Send" to beeper task.
+                g_HeadArrayBeepPattern = BEEPER_PATTERN_EOL;  // Clear this request.
+                
+            }
+        }
+
         for (int sensor_id = 0; sensor_id < (int)HEAD_ARRAY_SENSOR_EOL; sensor_id++)
         {
             g_PadInfo[sensor_id].m_CurrentPadStatus = headArrayBspDigitalState((HeadArraySensor_t)sensor_id);
@@ -454,27 +468,42 @@ static void HeadArrayInputControlTask(void)
         if (g_PadInfo[HEAD_ARRAY_SENSOR_CENTER].m_CurrentPadStatus != g_PadInfo[HEAD_ARRAY_SENSOR_CENTER].m_PreviousPadStatus)
         {
             if (g_PadInfo[HEAD_ARRAY_SENSOR_CENTER].m_CurrentPadStatus)
+            {
                 GenOutCtrlApp_SetStateAll(GEN_OUT_FORWARD_PAD_ACTIVE);
+                g_HeadArrayBeepPattern = BEEPER_PATTERN_PAD_ACTIVE;
+            }
             else
+            {
                 GenOutCtrlApp_SetStateAll(GEN_OUT_FORWARD_PAD_INACTIVE);
+            }
             g_PadInfo[HEAD_ARRAY_SENSOR_CENTER].m_PreviousPadStatus = g_PadInfo[HEAD_ARRAY_SENSOR_CENTER].m_CurrentPadStatus;
         }
 
         if (g_PadInfo[HEAD_ARRAY_SENSOR_LEFT].m_CurrentPadStatus != g_PadInfo[HEAD_ARRAY_SENSOR_LEFT].m_PreviousPadStatus)
         {
             if (g_PadInfo[HEAD_ARRAY_SENSOR_LEFT].m_CurrentPadStatus)
+            {
                 GenOutCtrlApp_SetStateAll(GEN_OUT_LEFT_PAD_ACTIVE);
+                g_HeadArrayBeepPattern = BEEPER_PATTERN_PAD_ACTIVE;
+            }
             else
+            {
                 GenOutCtrlApp_SetStateAll(GEN_OUT_LEFT_PAD_INACTIVE);
+            }
             g_PadInfo[HEAD_ARRAY_SENSOR_LEFT].m_PreviousPadStatus = g_PadInfo[HEAD_ARRAY_SENSOR_LEFT].m_CurrentPadStatus;
         }
 
         if (g_PadInfo[HEAD_ARRAY_SENSOR_RIGHT].m_CurrentPadStatus != g_PadInfo[HEAD_ARRAY_SENSOR_RIGHT].m_PreviousPadStatus)
         {
             if (g_PadInfo[HEAD_ARRAY_SENSOR_RIGHT].m_CurrentPadStatus)
+            {
                 GenOutCtrlApp_SetStateAll(GEN_OUT_RIGHT_PAD_ACTIVE);
+                g_HeadArrayBeepPattern = BEEPER_PATTERN_PAD_ACTIVE;
+            }
             else
+            {
                 GenOutCtrlApp_SetStateAll(GEN_OUT_RIGHT_PAD_INACTIVE);
+            }
             g_PadInfo[HEAD_ARRAY_SENSOR_RIGHT].m_PreviousPadStatus = g_PadInfo[HEAD_ARRAY_SENSOR_RIGHT].m_CurrentPadStatus;
         }
         

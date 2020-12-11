@@ -41,6 +41,7 @@
 #include "user_button_bsp.h"
 #include "user_button.h"
 #include "general_output_ctrl_app.h"
+#include "general_output_ctrl_bsp.h"
 #include "ha_hhp_interface_app.h"
 #include "app_common.h"
 
@@ -61,7 +62,8 @@ static void (*MainState)(void);
 static int g_StartupDelayCounter;
 static int g_SwitchDelay;
 static uint8_t g_ExeternalSwitchStatus;
-static BeepPattern_t g_BeepPattern = BEEPER_PATTERN_EOL;
+
+static BeepPattern_t g_BeepPatternRequest = BEEPER_PATTERN_EOL;
 static uint8_t g_MainTaskID = 0;
 
 
@@ -120,7 +122,7 @@ static void DoBluetooth_State (void);
 
 void MainTaskInitialise(void)
 {
-    g_BeepPattern = BEEPER_PATTERN_EOL;
+    g_BeepPatternRequest = BEEPER_PATTERN_EOL;
     g_StartupDelayCounter = 1000 / MAIN_TASK_DELAY;
 
 //    #define BLUETOOTH_LED_SIGNAL_IS_ACTIVE()        (LATCbits.LATC2 == GPIO_HIGH)
@@ -181,18 +183,15 @@ static void MainTask (void)
         
         MainState();
 
-        if (g_BeepPattern != BEEPER_PATTERN_EOL)
+        if (g_BeepPatternRequest != BEEPER_PATTERN_EOL)     // I want to send a new command to Beeper task
         {
-            myBeepMsg.signal = g_BeepPattern;
-            msg_post_async (g_BeeperTaskID, myBeepMsg);
-            
-//            event_to_send_beeper_task = beeperBeep(g_BeepPattern);
-//            if (event_to_send_beeper_task != NO_EVENT)
-//            {
-//                event_signal(event_to_send_beeper_task);
-//            }
-            g_BeepPattern = BEEPER_PATTERN_EOL;
-         }
+            if (g_NewBeepPattern == BEEPER_PATTERN_EOL)
+            {
+                g_NewBeepPattern = g_BeepPatternRequest;    // "Send" to beeper task.
+                g_BeepPatternRequest = BEEPER_PATTERN_EOL;  // Clear this request.
+                
+            }
+        }
 
         task_wait(MILLISECONDS_TO_TICKS(MAIN_TASK_DELAY));
 
@@ -270,7 +269,7 @@ static void Driving_Setup_State (void)
     // When it does, go to the Driving State.
     if ((g_ExeternalSwitchStatus & USER_SWITCH) == false)
     {
-        //g_BeepPattern = BEEPER_PATTERN_PAD_ACTIVE; // ANNOUNCE_POWER_ON;
+        //g_BeepPatternRequest = BEEPER_PATTERN_PAD_ACTIVE; // ANNOUNCE_POWER_ON;
         // Set to Blue tooth state
         MainState = Driving_State;
     }
@@ -309,27 +308,31 @@ static void Driving_State (void)
             speedPercentage = -100;
         }
     }
-    SetSpeedAndDirection (speedPercentage, directionPercentage);
     
     // Check the user port for active... If so, change to Bluetooth state.
     if (g_ExeternalSwitchStatus & USER_SWITCH)
     {
-        SetSpeedAndDirection (0, 0);
-        
+        speedPercentage = 0;        // Force no drive demand.
+        directionPercentage = 0;
+        // TODO: Comment out the following code to allow it execute
+        GenOutCtrlApp_SetStateAll(GEN_OUT_POWER_LED_OFF);
+
+        //LATEbits.LATE0 = GPIO_HIGH;             // This turns the LED off #1
+        //GenOutCtrlBsp_SetInactive (GEN_OUT_CTRL_ID_POWER_LED);  // Turn off the LED
+        g_BeepPatternRequest = BEEPER_PATTERN_GOTO_IDLE;
+        // Setup delay time.
         g_SwitchDelay = 3000 / MAIN_TASK_DELAY;
-        
         MainState = Driving_UserSwitch_State;
     }
+
+    SetSpeedAndDirection (speedPercentage, directionPercentage);
 }
 
 //-------------------------------------------------------------------------
-//static void Driving_UserSwitchActivated (void)
-//{
-//    g_SwitchDelay = 3000 / MAIN_TASK_DELAY;
-//    
-//    MainState = Driving_UserSwitch_State;
-//}
-
+// Driving_UserSwitch_State
+//      Stay here until
+//      a. The delays expires then switch to Bluetooth active state.
+//      b. The switch is released prior to delay expires... goto Idle state.
 //-------------------------------------------------------------------------
 static void Driving_UserSwitch_State(void)
 {
@@ -342,12 +345,12 @@ static void Driving_UserSwitch_State(void)
         // Did we wait long enough to switch to Bluetooth
         if (g_SwitchDelay == 0)
         {
-            g_BeepPattern = ANNOUNCE_BLUETOOTH;
+            g_BeepPatternRequest = ANNOUNCE_BLUETOOTH;
 //            GenOutCtrlApp_SetStateAll (GEN_OUT_BLUETOOTH_ENABLED);
             MainState = BluetoothSetup_State;
         }
     }
-    else
+    else // The Switch is released before the Long Press occurred.
     {
         MainState = Driving_Idle_State;
     }
@@ -362,6 +365,12 @@ static void Driving_Idle_State (void)
 {
     if (g_ExeternalSwitchStatus & USER_SWITCH)
     {
+        g_BeepPatternRequest = BEEPER_PATTERN_RESUME_DRIVING;
+        
+        // TODO: Comment out the following code to allow it execute
+        GenOutCtrlApp_SetStateAll (GEN_OUT_POWER_LED_ON);
+        //LATEbits.LATE0 = GPIO_LOW;             // This turns the LED off #1
+        //GenOutCtrlBsp_SetActive (GEN_OUT_CTRL_ID_POWER_LED);
         MainState = OONAPU_Setup_State;
     }
 }

@@ -37,7 +37,8 @@ typedef enum
     ANNOUNCE_RNET_SEATING_ACTIVE,
     ANNOUNCE_BEEPER_RNET_SLEEP,
 	BEEPER_PATTERN_USER_BUTTON_SHORT_PRESS,
-	BEEPER_PATTERN_USER_BUTTON_LONG_PRESS,
+	BEEPER_PATTERN_GOTO_IDLE,
+    BEEPER_PATTERN_RESUME_DRIVING,
 	BEEPER_PATTERN_EEPROM_NOT_INIT_ON_BOOT,
 	BEEPER_PATTERN_MODE_ACTIVE,
 	BEEPER_PATTERN_PAD_ACTIVE,
@@ -53,6 +54,7 @@ typedef struct
 
 // Mailbox definitions for sending info to Beep Task.
 extern uint8_t g_BeeperTaskID;
+extern BeepPattern_t g_NewBeepPattern;
 
 /* ***********************   Function Prototypes   ************************ */
 

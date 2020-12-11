@@ -29,11 +29,11 @@
 
 // I'm including the task delays to ensure proper sequencing.
 #define MAIN_TASK_DELAY (37)        // Number of milliseconds for the main task.
-#define BEEPER_TASK_DELAY (19)      // Slighly faster than the Main Task.
+#define BEEPER_TASK_DELAY (10)      // Slighly faster than the Main Task.
 // I believe that msg's must be pulled out of the queue. It behaves if the
 // msg queue gets full even if use the "_async" calls.
 #define HEAD_ARRAY_TASK_DELAY (20)
-#define USER_BUTTON_TASK_DELAY (10)
+#define USER_BUTTON_TASK_DELAY (50)
 
 #endif // End of RTOS_TASK_PRIORITIES_H_
 

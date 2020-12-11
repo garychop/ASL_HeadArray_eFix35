@@ -109,7 +109,8 @@ typedef enum
 {
     GEN_OUT_CTRL_STATE_IDLE,
 
-    GEN_OUT_POWER_ON,       // Execute this once at power up to turn on the Power LED
+    GEN_OUT_POWER_LED_ON,       // Execute this once at power up to turn on the Power LED
+    GEN_OUT_POWER_LED_OFF,
             
     //-------------------------------------------------------------------------
     // States that only pertain to the IDs GEN_OUT_CTRL_LED0 and GEN_OUT_CTRL_LED1

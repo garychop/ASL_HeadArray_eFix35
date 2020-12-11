@@ -48,9 +48,9 @@ typedef struct
 
 #define MAX_BEEPS_PER_PATTERN (4)
 #define MAX_BEEP_PATTERNS (10)
-#define BEEP_POOL_SIZE (2)
-#define END_BEEP (0xff)
-
+//#define BEEP_POOL_SIZE (2)
+#define END_BEEP (0xffff)
+#define CHIRP (0x0)
 
 //-----------------------------------------------------------------------------
 // NOTE: Using the following union cause the application to misbehave and
@@ -74,9 +74,13 @@ typedef struct
 //-----------------------------------------------------------------------------
 
 
+/* ***********************   Project Scope Variables   *********************** */
+
+BeepPattern_t g_NewBeepPattern;
+
 /* ***********************   File Scope Variables   *********************** */
 
-static Msg_t g_BeepMsgPool[BEEP_POOL_SIZE];
+//static Msg_t g_BeepMsgPool[BEEP_POOL_SIZE];
 static uint8_t g_PatternIndex;
 static uint8_t g_PatternStep;
 static void (*BeepStateEngine)(void);
@@ -91,30 +95,35 @@ const Beep_t g_BeepPatterns[MAX_BEEP_PATTERNS][MAX_BEEPS_PER_PATTERN] =
 {
     {//[0]   // Pad Active beep pattern
         {BEEPER_PATTERN_PAD_ACTIVE,BEEP_SMART},
-        {100, 50},
-        //{END_BEEP,0},
+        {CHIRP, 50},
         {END_BEEP,0}
     },
     {//[1]
         {BEEPER_PATTERN_USER_BUTTON_SHORT_PRESS,BEEP_ALWAYS},
-        {500, 0},
-        //{END_BEEP,0},
+        {200, 0},
         {END_BEEP,0}
     },
     {//[2]
         {ANNOUNCE_BLUETOOTH,BEEP_ALWAYS},
-        {100, 200},
-        {100, 200},
+        {2000, 50},
         {END_BEEP,0}
     },
     {//[3]
         {ANNOUNCE_POWER_ON, BEEP_ALWAYS},
-        //{END_BEEP,0},
-        //{END_BEEP,0},
+        {CHIRP, 50},
         {END_BEEP,0}
     },
-    { {BEEPER_PATTERN_EOL, 0}},// {END_BEEP,0}, {END_BEEP,0},  {END_BEEP,0} },  // [4]
-    { {BEEPER_PATTERN_EOL, 0}},// {END_BEEP,0}, {END_BEEP,0},  {END_BEEP,0} },  // [5]
+    {//[4]
+        {BEEPER_PATTERN_GOTO_IDLE, 0},
+        {50, 150},
+        {50, 50},
+        {END_BEEP,0}
+    },
+    {//[5]
+        {BEEPER_PATTERN_RESUME_DRIVING,BEEP_ALWAYS},
+        {100, 0},
+        {END_BEEP,0}
+    },
     { {BEEPER_PATTERN_EOL, 0}},// {END_BEEP,0}, {END_BEEP,0},  {END_BEEP,0} },  // [6]
     { {BEEPER_PATTERN_EOL, 0}},// {END_BEEP,0}, {END_BEEP,0},  {END_BEEP,0} },  // [7]
     { {BEEPER_PATTERN_EOL, 0}},// {END_BEEP,0}, {END_BEEP,0},  {END_BEEP,0} },  // [8]
@@ -138,6 +147,7 @@ static void BeepReady (void);
 static void StopBeeping (void);
 static void WaitForStopping (void);
 static void WeBeMakingNoise (void);
+static void BeeperOffDelay (void);
 
 /* *******************   Public Function Definitions   ******************** */
 
@@ -146,10 +156,18 @@ static void BeepReady (void)
     if (g_NewBeep)
     {
         g_NewBeep = false;      // Ok, we can clear the request for a new beep sequence
-        g_PatternStep = 0;      // Point to the first step in the Beep Sequence.
+        g_PatternStep = 1;      // Point to the first step in the Beep Sequence.
         beeperBspActiveSet (true); // Turn on beeping
-        g_Delay = g_BeepPatterns[g_PatternIndex][g_PatternStep].on_time_ms / BEEPER_TASK_DELAY;  // 1/2 second delay
-        BeepStateEngine = WeBeMakingNoise;
+        g_Delay = g_BeepPatterns[g_PatternIndex][g_PatternStep].on_time_ms / BEEPER_TASK_DELAY;
+        // I want to replicate the "chirpping" sound that the current 104 makes.
+        if (g_Delay == CHIRP)
+        {
+            BeepStateEngine = StopBeeping;
+        }
+        else
+        {
+            BeepStateEngine = WeBeMakingNoise;
+        }
     }
 }
 
@@ -161,7 +179,49 @@ static void WeBeMakingNoise (void)
         --g_Delay;
 
     if (g_Delay == 0)
-        BeepStateEngine = StopBeeping;
+    {
+        beeperBspActiveSet (false); // Turn off beeping
+        if (g_BeepPatterns[g_PatternIndex][g_PatternStep].off_time_ms == 0)
+        {
+            BeepStateEngine = StopBeeping;
+        }
+        else
+        {
+            g_Delay = g_BeepPatterns[g_PatternIndex][g_PatternStep].off_time_ms / BEEPER_TASK_DELAY;
+            BeepStateEngine = BeeperOffDelay;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------
+
+static void BeeperOffDelay (void)
+{
+    if (g_Delay > 0)
+        --g_Delay;
+
+    if (g_Delay == 0)
+    {
+        ++g_PatternStep;
+        if (g_BeepPatterns[g_PatternIndex][g_PatternStep].on_time_ms == END_BEEP)
+        {
+            BeepStateEngine = BeepReady;
+        }
+        else // We have more beeps
+        {
+            beeperBspActiveSet (true); // Turn on beeping
+            g_Delay = g_BeepPatterns[g_PatternIndex][g_PatternStep].on_time_ms / BEEPER_TASK_DELAY;
+            // I want to replicate the "chirpping" sound that the current 104 makes.
+            if (g_Delay == CHIRP)
+            {
+                BeepStateEngine = StopBeeping;
+            }
+            else
+            {
+                BeepStateEngine = WeBeMakingNoise;
+            }
+        }
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -215,8 +275,10 @@ void beeperInit(void)
 	//os_event_start_beep_seq_id = event_create();
 	//os_event_beep_seq_complete = event_create();
 //    beeper_task_id = task_create(BeepPatternTask, NULL, BEEPER_MGMT_TASK_PRIO, NULL, 0, 0 );
-    g_BeeperTaskID = task_create(BeepPatternTask, NULL, BEEPER_MGMT_TASK_PRIO, g_BeepMsgPool, BEEP_POOL_SIZE, sizeof (Msg_t)); // sizeof (BeepMsg_t));
-//    g_BeeperTaskID = task_create(BeepPatternTask, NULL, BEEPER_MGMT_TASK_PRIO, NULL, 0, 0);
+//    g_BeeperTaskID = task_create(BeepPatternTask, NULL, BEEPER_MGMT_TASK_PRIO, g_BeepMsgPool, BEEP_POOL_SIZE, sizeof (Msg_t)); // sizeof (BeepMsg_t));
+    g_BeeperTaskID = task_create(BeepPatternTask, NULL, BEEPER_MGMT_TASK_PRIO, NULL, 0, 0);
+
+    g_NewBeepPattern = BEEPER_PATTERN_EOL; // Indicate that we have processed the request
     
     BeepStateEngine = BeepReady;
 }
@@ -251,6 +313,57 @@ Evt_t beeperBeep(BeepPattern_t pattern)
 //
 //-------------------------------
 
+static void BeepPatternTask(void)
+{
+    BeepPattern_t pattern;
+    
+    task_open();
+
+    while (1)
+    {
+        task_wait(MILLISECONDS_TO_TICKS(BEEPER_TASK_DELAY));
+
+        if (g_NewBeepPattern != BEEPER_PATTERN_EOL)
+        {
+            pattern = g_NewBeepPattern;     // Get a local copy of the new pattern right away.
+            g_NewBeepPattern = BEEPER_PATTERN_EOL; // Indicate that we have processed the request
+            ++IGotAMsg;
+            
+            // locate the beep pattern
+            for (uint8_t i = 0; i<MAX_BEEP_PATTERNS; ++i)
+            {
+                // The first item in the Beep Sequence represents the beep pattern
+                // and the Beep Allowance information.
+                if (g_BeepPatterns[i][0].on_time_ms == BEEPER_PATTERN_EOL)  // End of list?
+                    break;
+                // Check to see if we can (always) beep or if we
+                // have to be smart about it and look at the DIP switch.
+                if (g_BeepPatterns[i][0].on_time_ms == pattern)
+                {
+                    if (g_BeepPatterns[i][0].off_time_ms == BEEP_SMART)
+                    {
+                        if (IsBeepEnabled() == false)   // We are NOT going to beep.
+                            break;
+                    }
+                    g_NewBeep = true;
+                    g_PatternIndex = i;
+                    if (BeepStateEngine != BeepReady)
+                    {
+                        BeepStateEngine = ForceStopBeeping;
+                    }
+                    break;
+                }
+            }
+
+        }
+        
+
+        BeepStateEngine();
+	}
+    task_close();
+}
+
+#ifdef USING_MESSAGING
 static void BeepPatternTask(void)
 {
     task_open();
@@ -288,6 +401,7 @@ static void BeepPatternTask(void)
 	}
     task_close();
 }
+#endif // #ifdef USING_MESSAGING
 
 //-------------------------------
 // Function: IsBeepEnabled

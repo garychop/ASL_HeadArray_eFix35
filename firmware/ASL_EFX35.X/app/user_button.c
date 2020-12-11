@@ -79,11 +79,13 @@ static volatile uint16_t time_for_func_to_trigger_ms[] =
 };
 
 // NOTE: Must match UserButtonPress_t exactly
-static volatile BeepPattern_t beep_pattern_for_press_type[] =
-{
-//	USER_BTN_PRESS_NONE,		USER_BTN_PRESS_SHORT					USER_BTN_PRESS_LONG
-	BEEPER_PATTERN_EOL,			BEEPER_PATTERN_USER_BUTTON_SHORT_PRESS,	BEEPER_PATTERN_USER_BUTTON_LONG_PRESS
-};
+//static volatile BeepPattern_t beep_pattern_for_press_type[] =
+//{
+////	USER_BTN_PRESS_NONE,		USER_BTN_PRESS_SHORT					USER_BTN_PRESS_LONG
+//	BEEPER_PATTERN_EOL,			BEEPER_PATTERN_USER_BUTTON_SHORT_PRESS,	BEEPER_PATTERN_USER_BUTTON_LONG_PRESS
+//};
+
+BeepPattern_t g_ButtonBeep;
 
 /* ***********************   Function Prototypes   ************************ */
 
@@ -167,6 +169,16 @@ static void UserButtonMonitorTask (void)
 
     while (1)
     {
+        if (g_ButtonBeep != BEEPER_PATTERN_EOL)     // I want to send a new command to Beeper task
+        {
+            if (g_NewBeepPattern == BEEPER_PATTERN_EOL)
+            {
+                g_NewBeepPattern = g_ButtonBeep;    // "Send" to beeper task.
+                g_ButtonBeep = BEEPER_PATTERN_EOL;  // Clear this request.
+
+            }
+        }
+
         feature2 = 0; 
         // Get the Long Press time each cycle to ensure that if it's changed during programming, it is used before power cycle.
     	time_for_func_to_trigger_ms[(int)USER_BTN_PRESS_LONG] = 1000;
@@ -212,8 +224,7 @@ static void UserButtonMonitorTask (void)
 //                        {
 //                            event_signal(event_to_send_beeper_task);
 //                        }
-                        myBeepMsg.signal = BEEPER_PATTERN_USER_BUTTON_SHORT_PRESS;
-                        msg_post_async (g_BeeperTaskID, myBeepMsg);
+                        //g_ButtonBeep = BEEPER_PATTERN_USER_BUTTON_SHORT_PRESS;
                         g_ButtonState = PROCESS_ACTIVE_USER_SWTICH;
                     }
                     else if (currentButtonPattern & MODE_SWITCH)
