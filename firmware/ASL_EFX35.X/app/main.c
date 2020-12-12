@@ -32,7 +32,8 @@
 #include "head_array.h"
 #include "beeper.h"
 #include "user_button.h"
-#include "general_output_ctrl_app.h"
+//#include "general_output_ctrl_app.h"
+#include "general_output_ctrl_bsp.h"
 #include "ha_hhp_interface_app.h"
 #include "app_common.h"
 #include "MainState.h"
@@ -67,8 +68,9 @@ int main(void)
 
     bspInitCore();
 	testGpioInit();
-	GenOutCtrlApp_Init();
-
+	//GenOutCtrlApp_Init();
+    GenOutCtrlBsp_INIT();
+    
 	// Other high level modules depend on EEPROM being initialized, therefore it must be initialized here.
 #ifdef ASL110
 	bool eeprom_initialized_before = eepromAppInit();

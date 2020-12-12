@@ -66,6 +66,8 @@
 
 #if defined(GENERAL_OUTPUT_CTRL_MODULE_ENABLE)
 
+#ifdef OK_TO_USE_OUTPUT_CONTROL
+
 /*
  ********************************************************************************************************
  *                                               DATA TYPES
@@ -1225,6 +1227,8 @@ static bool DefaultCbFunc(void)
 
 // End of Doxygen grouping
 /** @} */
+
+#endif // #ifdef OK_TO_USE_OUTPUT_CONTROL
 
 #endif
 

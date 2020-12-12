@@ -129,32 +129,15 @@
  *                                         PUBLIC FUNCTIONS DEFINITIONS
  ********************************************************************************************************
  */
-
-//int BLUETOOTH_LED_SIGNAL_IS_ACTIVE()
-//{
-//    return (LATAbits.LATA4 == GPIO_HIGH);
-//}
-//
-//void BLUETOOTH_LED_SIGNAL_SET(bool active)
-//{
-//    LATAbits.LATA4 = (active ? GPIO_HIGH : GPIO_LOW);
-//}
-//
-//void BLUETOOTH_LED_SIGNAL_TOGGLE()
-//{
-//    BLUETOOTH_LED_SIGNAL_SET(!BLUETOOTH_LED_SIGNAL_IS_ACTIVE());
-//}
-//
-//void BLUETOOTH_LED_SIGNAL_INIT()
-//{
-//    TRISAbits.TRISA4 = GPIO_BIT_OUTPUT;
-//    BLUETOOTH_LED_SIGNAL_SET(false);
-//}
-//void BLUETOOTH_LED_SIGNAL_DEINIT()
-//{
-//    TRISAbits.TRISA4 = GPIO_BIT_INPUT;
-//    ANSELAbits.ANSELA4 = 0;
-//}
+void GenOutCtrlBsp_INIT(void)
+{
+    GenOutCtrlBsp_Enable (GEN_OUT_CTRL_ID_FORWARD_PAD_LED);
+    GenOutCtrlBsp_Enable (GEN_OUT_CTRL_ID_LEFT_PAD_LED);
+    GenOutCtrlBsp_Enable (GEN_OUT_CTRL_ID_RIGHT_PAD_LED);
+    GenOutCtrlBsp_Enable (GEN_OUT_CTRL_ID_REVERSE_PAD_LED);
+    GenOutCtrlBsp_Enable (GEN_OUT_CTRL_ID_POWER_LED);
+    
+}
 
 /**
  * Sets up GPIO to control the general output control item.

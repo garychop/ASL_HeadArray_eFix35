@@ -89,8 +89,7 @@ bool ModeButtonBspIsActive(void)
 // DIP Switch #6 is on D3
 void SW6_Init()
 {
-    // This port is ALWAYS an input. The following code will not compile.
-    //TRISCbits.TRISC3 = GPIO_BIT_INPUT;
+    TRISDbits.TRISD3 = GPIO_BIT_INPUT;
 }
 
 bool Is_SW6_ON(void)

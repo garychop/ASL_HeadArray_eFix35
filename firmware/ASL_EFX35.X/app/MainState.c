@@ -158,16 +158,6 @@ static void MainTask (void)
         
         MainState();
 
-//        if (g_BeepPatternRequest != BEEPER_PATTERN_EOL)     // I want to send a new command to Beeper task
-//        {
-//            if (g_NewBeepPattern == BEEPER_PATTERN_EOL)
-//            {
-//                g_NewBeepPattern = g_BeepPatternRequest;    // "Send" to beeper task.
-//                g_BeepPatternRequest = BEEPER_PATTERN_EOL;  // Clear this request.
-//                
-//            }
-//        }
-
         task_wait(MILLISECONDS_TO_TICKS(MAIN_TASK_DELAY));
 
     }
@@ -197,6 +187,7 @@ static void Startup_State (void)
         g_StartupDelayCounter = (500 / MAIN_TASK_DELAY);
         if (Is_SW3_ON())    // If ON, power up with the chair's power.
         {
+            GenOutCtrlBsp_SetActive (GEN_OUT_CTRL_ID_POWER_LED);  // Turn on the LED
             MainState = OONAPU_State;
         }
         else    // Go to a Drive Disable state.
@@ -343,6 +334,7 @@ static void Driving_UserSwitch_State(void)
     }
     else // The Switch is released before the Long Press occurred.
     {
+        GenOutCtrlBsp_SetInactive (GEN_OUT_CTRL_ID_POWER_LED);  // Turn off the LED
         MainState = Driving_Idle_State;
     }
 }

@@ -97,6 +97,8 @@ typedef struct
  **************************************************************************************************
  */
 
+#ifdef OK_TO_USE_CONTROL_SCHEME
+
 static volatile unsigned int state_change_req_circ_buf_pos_head = 0;
 static volatile unsigned int state_change_req_circ_buf_pos_tail = 0;
 static volatile unsigned int state_change_req_circ_buf_slots_in_use = 0;
@@ -259,6 +261,8 @@ static void SetOutputControllersToNewState(StateCtrl_t *stateData);
  **************************************************************************************************
  */
 
+#endif // #ifdef OK_TO_USE_CONTROL_SCHEME
+
 /**
  * This function initializes the data structures and drivers needed to run the LED's on the board.
  *
@@ -274,6 +278,8 @@ bool GenOutCtrlApp_Init(void)
         return false;
     }
 
+#ifdef OK_TO_USE_CONTROL_SCHEME
+
     AddStates();
     
 #if defined(GENERAL_OUTPUT_CTRL_USE_MUTEX)
@@ -286,9 +292,12 @@ bool GenOutCtrlApp_Init(void)
 
     // Create the state update and control task
     (void)task_create(ControlTask, NULL, GEN_OUT_CTRL_MGMT_TASK_PRIO, NULL, 0, 0);
+#endif // #ifdef OK_TO_USE_CONTROL_SCHEME
 
     return true;
 }
+
+#ifdef OK_TO_USE_CONTROL_SCHEME
 
 /**
  * @brief Makes a request to set the state of all output controllers.
@@ -522,6 +531,8 @@ static void SetOutputControllersToNewState(StateCtrl_t *stateData)
         GenOutCtrl_Start(stateData->id); // Start it if it's not already started under automatic control.
     }
 }
+
+#endif // #ifdef OK_TO_USE_CONTROL_SCHEME
 
 // End of Doxygen grouping
 /** @} */

@@ -274,15 +274,16 @@ void beeperInit(void)
 
     data_lock_mutex = sem_bin_create(1); // Set up so the first task to try and take the semaphore succeeds
 
+    g_NewBeepPattern = BEEPER_PATTERN_EOL; // Indicate that we have processed the request
+    g_NewBeep = false;      // Ok, we can clear the request for a new beep sequence
+    BeepStateEngine = BeepReady;
+
 	//os_event_start_beep_seq_id = event_create();
 	//os_event_beep_seq_complete = event_create();
 //    beeper_task_id = task_create(BeepPatternTask, NULL, BEEPER_MGMT_TASK_PRIO, NULL, 0, 0 );
 //    g_BeeperTaskID = task_create(BeepPatternTask, NULL, BEEPER_MGMT_TASK_PRIO, g_BeepMsgPool, BEEP_POOL_SIZE, sizeof (Msg_t)); // sizeof (BeepMsg_t));
     g_BeeperTaskID = task_create(BeepPatternTask, NULL, BEEPER_MGMT_TASK_PRIO, NULL, 0, 0);
 
-    g_NewBeepPattern = BEEPER_PATTERN_EOL; // Indicate that we have processed the request
-    
-    BeepStateEngine = BeepReady;
 }
 
 //-------------------------------
@@ -354,12 +355,13 @@ static void BeepPatternTask(void)
 //-------------------------------
 void beeperBeep(BeepPattern_t pattern)
 {
-    if (BeepStateEngine != BeepReady)
-    {
-        BeepStateEngine = ForceStopBeeping;
-    }
-    
-    g_NewBeepPattern = pattern;
+    return; // TODO: Put code back in.
+//    if (BeepStateEngine != BeepReady)
+//    {
+//        BeepStateEngine = ForceStopBeeping;
+//    }
+//    
+//    g_NewBeepPattern = pattern;
 }
 
 //-------------------------------
